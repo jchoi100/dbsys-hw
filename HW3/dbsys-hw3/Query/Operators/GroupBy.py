@@ -91,7 +91,7 @@ class GroupBy(Operator):
   # Set-at-a-time operator processing
   def processAllPages(self):
     # Create partitions of the input records by hashing the group-by values
-    for (pageId, page) in iter(self.subPlan):
+    for (pageId, page) in self.subPlan:
       for tup in page:
         groupVal = self.ensureTuple(self.groupExpr(self.subSchema.unpack(tup)))
         groupId = self.groupHashFn(groupVal)
