@@ -76,12 +76,84 @@ class Optimizer:
 
     return self.statsCache[cacheKey]
 
+  def traverseTree(self, curr, all_selects):
+
+    if curr.operatorType().endswith("Join") or\
+       curr.operatorType() is "Union":
+      leftChild = curr.lhsPlan
+      rightChild = curr.rhsPlan
+
+      while leftChild.operatorType is "Select":
+        all_selects.append(leftChild.selectExpr)
+        curr.lhsPlan = leftChild.subPlan
+        leftChild = curr.lhsPlan
+
+      while rightChild.operatorType() is "Select":
+        all_selects.append(rightChild.selectExpr)
+        curr.rhsPlan = rightChild.subPlan
+        rightChild = curr.rhsPlan
+
+      traverseTree(curr.lhsPlan, all_selects)
+      traverseTree(curr.rhsPlan, all_selects)
+
+    else:
+      traverseTree(curr.subPlan, all_selects)
+
+    return curr, all_selects
+
+
   # Given a plan, return an optimized plan with both selection and
   # projection operations pushed down to their nearest defining relation
   # This does not need to cascade operators, but should determine a
   # suitable ordering for selection predicates based on the cost model below.
   def pushdownOperators(self, plan):
-    # Retrieve all the subplans in this plan
+    plan.prepare(self.db)
+    root = plan.root
+    all_relations_list = plan.relations()
+    all_selects = []
+
+    while root.operatorType() is "Select":
+      all_selects.append(root.selectExpr)
+      root = root.subPlan
+
+    # new_root: root of new tree with all the selects removed.
+    # all_selects: list of all the select exprs from orig tree.
+    new_root, all_selects = traverseTree(root, all_selects)
+
+    newPlan = Plan(root = new_root)
+
+    # To be used to find out parent links.
+    allPlans = newPlan.flatten()
+
+    # Place all cnf-decomposed expressions in the following list.
+    cnf_decomposed_selects = []
+    for predicate in all_selects:
+      decomposed = ExpressionInfo(predicate).decomposeCNF()
+      for expr in decomposed:
+        cnf_decomposed_selects.append(expr)
+
+    # Traverse through each select statement and see where they
+    # can go. Start from the bottom of the tree for each expr.
+
+    attribute_dict = {}
+    for relation in all_relations_list:
+      att_list = relation.schema().fields
+      for att in att_list:
+        attribute_dict[att] = relation
+
+    for predicate in cnf_decomposed_selects:
+
+
+"""
+"""
+
+  def firstSubsetOfSecond(self, firstSet, secondSet):
+    for elem in firstSet:
+      if elem not in secondSet:
+        return False
+    return True
+
+  def pushDownOperatorsObsolete(self, plan):
     allPlans = plan.flatten()
     toBePushedDown = deque()
 
