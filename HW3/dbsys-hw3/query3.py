@@ -61,11 +61,21 @@ query3 = db.query().fromTable('customer') \
 """
 Optimization Option
 """
-# query3 = db.optimizer.pushdownOperators(query3)
-"""
-"""
+optimized_query = db.optimizer.pushdownOperators(query3)
 
-q3results = [query3.schema().unpack(tup) \
+
+print("Un-Optimized Explain: ")
+print(query3.explain())
+print("Un-Optimized Results: ")
+qresults = [query3.schema().unpack(tup) \
         for page in db.processQuery(query3) \
         for tup in page[1]]
-print(q3results)
+print(qresults)
+print("\n")
+print("Optimized Explain: ")
+print(optimized_query.explain())
+print("Optimized Results: ")
+opt_qresults = [optimized_query.schema().unpack(tup) \
+        for page in db.processQuery(optimized_query) \
+        for tup in page[1]]
+print(opt_qresults)

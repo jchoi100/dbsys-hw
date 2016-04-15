@@ -43,7 +43,7 @@ rRegionKeySchema = DBSchema('regionkey2',  [('R_REGIONKEY', 'int')])
 sSuppKeySchema = DBSchema('suppKey', [('S_SUPPKEY', 'int')])
 lSuppKeySchema = DBSchema('lsKey', [('L_SUPPKEY', 'int')])
 
-query5 = db.query().fromTable('region') \
+query = db.query().fromTable('region') \
 				.join(db.query().fromTable('nation') \
 					.join(db.query().fromTable('supplier') \
 						.join(db.query().fromTable('lineitem') \
@@ -85,14 +85,22 @@ query5 = db.query().fromTable('region') \
 """
 Optimization Option
 """
-# query5 = db.optimizer.pushdownOperators(query5)
-"""
-"""
-print("Explain: ")
-print(q5.explain())
-print("\n")
-print("Results: ")
-q5results = [query5.schema().unpack(tup) \
-        for page in db.processQuery(query5) \
+optimized_query = db.optimizer.pushdownOperators(query)
+
+
+print("Un-Optimized Explain: ")
+print(query.explain())
+print("Un-Optimized Results: ")
+qresults = [query5.schema().unpack(tup) \
+        for page in db.processQuery(query) \
         for tup in page[1]]
-print(q5results)
+print(qresults)
+print("\n")
+print("Optimized Explain: ")
+print(optimized_query.explain())
+print("Optimized Results: ")
+opt_qresults = [optimized_query.schema().unpack(tup) \
+        for page in db.processQuery(optimized_query) \
+        for tup in page[1]]
+print(opt_qresults)
+

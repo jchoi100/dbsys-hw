@@ -86,11 +86,23 @@ query4 = db.query().fromTable('nation') \
 """
 Optimization Option
 """
-# query4 = db.optimizer.pushdownOperators(query4)
-"""
-"""
+optimized_query = db.optimizer.pushdownOperators(query4)
 
-q4results = [query4.schema().unpack(tup) \
+
+print("Un-Optimized Explain: ")
+print(query4.explain())
+print("Un-Optimized Results: ")
+qresults = [query4.schema().unpack(tup) \
         for page in db.processQuery(query4) \
         for tup in page[1]]
-print(q4results)
+print(qresults)
+print("\n")
+print("Optimized Explain: ")
+print(optimized_query.explain())
+print("Optimized Results: ")
+opt_qresults = [optimized_query.schema().unpack(tup) \
+        for page in db.processQuery(optimized_query) \
+        for tup in page[1]]
+print(opt_qresults)
+
+
