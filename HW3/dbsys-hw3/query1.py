@@ -32,14 +32,21 @@ query1 = db.query().fromTable('lineitem').where('L_SHIPDATE >= 19940101 and L_SH
 """
 Optimization Option
 """
-#query1 = db.optimizer.pushdownOperators(query1)
-"""
-"""
+optimized_query1 = db.optimizer.pushdownOperators(query1)
+
+
 print("Un-Optimized Explain: ")
-print()
-print()
-print()
+print(query1.explain())
+print("Un-Optimized Results: ")
 q1results = [query1.schema().unpack(tup) \
         for page in db.processQuery(query1) \
         for tup in page[1]]
 print(q1results)
+print("\n")
+print("Optimized Explain: ")
+print(optimized_query1.explain())
+print("Optimized Results: ")
+opt_q1results = [optimized_query1.schema().unpack(tup) \
+        for page in db.processQuery(optimized_query1) \
+        for tup in page[1]]
+print(opt_q1results)
