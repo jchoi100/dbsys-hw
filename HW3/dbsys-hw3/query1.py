@@ -2,7 +2,7 @@ import Database
 import Database
 from Catalog.Schema import DBSchema
 
-db = Database.Database(dataDir='./data/data-tpch-sf-0.001')
+db = Database.Database(dataDir='./data')
 
 """
 select
@@ -17,27 +17,28 @@ where
 """
 
 keySchema = DBSchema('att', [('att', 'int')])
-aggSumSchema = DBSchema('revenue', [('revenue', 'int')])
+aggSumSchema = DBSchema('revenue', [('revenue', 'double')])
 
-query1 = db.query().fromTable('lineitem')\
-				   .where('L_SHIPDATE >= 19940101 and \
-				   	       L_SHIPDATE < 19950101 and \
-				   	       L_DISCOUNT < 0.07 and L_DISCOUNT > 0.05 and \
-				   	       L_QUANTITY < 24 ')\
+query1 = db.query().fromTable('lineitem').where('L_SHIPDATE >= 19940101 and L_SHIPDATE m 19950101 and L_DISCOUNT < 0.07 and L_DISCOUNT > 0.05 and \
+				   	       L_QUANTITY < 24 ') \
 				   .groupBy(\
 				   	  groupSchema = keySchema, \
 				   	  aggSchema = aggSumSchema, \
 				   	  groupExpr = (lambda e: 0), \
-				   	  aggExprs = [(0, lambda acc, e:acc + L_EXTENDEDPRICE * L_DISCOUNT, lambda x: x)], \
+				   	  aggExprs = [(0, lambda acc, e:acc + e.L_EXTENDEDPRICE * e.L_DISCOUNT, lambda x: x)], \
 				   	  groupHashFn = (lambda gbVal: 0)) \
-				   .select({'revenue': ('revenue', 'int')}).finalize()
+				   .select({'revenue': ('revenue', 'double')}).finalize()
+
 """
 Optimization Option
 """
-# query1 = db.optimizer.optimizeQuery(query1)
+#query1 = db.optimizer.pushdownOperators(query1)
 """
 """
-
+print("Un-Optimized Explain: ")
+print()
+print()
+print()
 q1results = [query1.schema().unpack(tup) \
         for page in db.processQuery(query1) \
         for tup in page[1]]

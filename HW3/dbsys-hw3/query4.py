@@ -39,7 +39,7 @@ keySchema = DBSchema('groupByKey', [('C_CUSTKEY', 'int'), ('C_NAME', 'char(25)')
 									('C_ACCTBAL', 'double'), ('C_PHONE', 'char(15)'), \
 									('N_NAME', 'char(25)'), ('C_ADDRESS', 'char(40)'), \
 									('C_COMMENT', 'char(117)')])
-aggSumSchema = DBSchema('revenue', [('revenue', 'int')])
+aggSumSchema = DBSchema('revenue', [('revenue', 'double')])
 
 lOrderKeySchema = DBSchema('orderkey',  [('L_ORDERKEY', 'int')])
 oOrderKeySchema = DBSchema('orderkey2',  [('O_ORDERKEY', 'int')])
@@ -52,21 +52,18 @@ query4 = db.query().fromTable('nation') \
 				.join(db.query().fromTable('customer') \
 					.join(db.query().fromTable('orders') \
 						.join(db.query().fromTable('lineitem'), \
-							  method = 'hash', \
+							  method = 'nested-loops', \
 							  lhsKeySchema = oOrderKeySchema, \
 							  rhsKeySchema = lOrderKeySchema, \
-							  lhsHashFn = 'hash(O_ORDERKEY) % 13', \
-							  rhsHashFn = 'hash(L_ORDERKEY) % 13'), \
-						  method = 'hash', \
+							  expr = 'L_ORDERKEY == O_ORDERKEY'), \
+						  method = 'nested-loops', \
 						  lhsKeySchema = cCustKeySchema, \
 						  rhsKeySchema = oCustKeySchema, \
-						  lhsHashFn = 'hash(C_CUSTKEY) % 13', \
-						  rhsHashFn = 'hash(O_CUSTKEY) % 13'), \
-					  method = 'hash', \
+						  expr = 'O_CUSTKEY == L_CUTKEY'), \
+					  method = 'nested-loops', \
 					  lhsKeySchema = nNationKeySchema, \
 					  rhsKeySchema = cNationKeySchema, \
-					  lhsHashFn = 'hash(N_NATIONKEY) % 13', \
-					  rhsHashFn = 'hash(C_NATIONKEY) % 13') \
+					  expr = 'C_NATIONKEY == N_NATIONKEY') \
 				   .where('O_ORDERDATE >= 19931001 and \
 				   	       O_ORDERDATE < 19940101 and \
 				   	       L_RETURNFLAG = \'R\'') \
@@ -74,11 +71,11 @@ query4 = db.query().fromTable('nation') \
 				   	  groupSchema = keySchema, \
 				   	  aggSchema = aggSumSchema, \
 				   	  groupExpr = (lambda e: (e.c_custkey, e.c_name, e.c_acctbal, e.c_phone, e.n_name, e.c_address, e.c_comment)), \
-				   	  aggExprs = [(0, lambda acc, e:acc + l_extendedprice * (1 - l_discount), lambda x: x)], \
+				   	  aggExprs = [(0, lambda acc, e:acc + e.l_extendedprice * (1 - e.l_discount), lambda x: x)], \
 				   	  groupHashFn = (lambda gbVal: hash((e.c_custkey, e.c_name, e.c_acctbal, e.c_phone, e.n_name, e.c_address, e.c_comment)) % 31)) \
 				   .select({'C_CUSTKEY': ('C_CUSTKEY', 'int'),
 				   			'C_NAME': ('C_NAME', 'char(25)'),
-				   			'revenue': ('revenue', 'int'),
+				   			'revenue': ('revenue', 'double'),
                           	'C_ACCTBAL': ('C_ACCTBAL', 'double'),
 				   			'N_NAME':('N_NAME', 'char(25)'),
 				   			'C_ADDRESS': ('C_ADDRESS', 'char(40)'),
@@ -89,7 +86,7 @@ query4 = db.query().fromTable('nation') \
 """
 Optimization Option
 """
-# query4 = db.optimizer.optimizeQuery(query4)
+# query4 = db.optimizer.pushdownOperators(query4)
 """
 """
 

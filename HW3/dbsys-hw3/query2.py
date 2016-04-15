@@ -16,32 +16,32 @@ where
 """
 
 keySchema = DBSchema('att', [('att', 'int')])
-aggSumSchema = DBSchema('promo_revenue', [('promo_revenue', 'int')])
+aggSumSchema = DBSchema('promo_revenue', [('promo_revenue', 'double')])
 leftKeySchema = DBSchema('partkey1', [('L_PARTKEY', 'int')])
 rightKeySchema = DBSchema('partkey2', [('P_PARTKEY', 'int')])
 
 query2 = db.query().fromTable('lineitem')\
 				   .join(db.query().fromTable('part'), \
-				   	method = 'hash', \
-				   	lhsHashFn = 'hash(L_PARTKEY) % 31', \
+				   	method = 'nested-loops', \
+                                         expr = 'L_PARTKEY == P_PARTKEY',\
 				   	lhsKeySchema = leftKeySchema, \
-				   	rhsHashFn = 'hash(P_PARTKEY) % 31', \
 				   	rhsKeySchema = rightKeySchema, \
 					) \
 				   .where('L_SHIPDATE >= 19950901 and \
-				   	       L_SHIPDATE < 19951001')\
+				   	       L_SHIPDATE < 19951001').finalize()
+"""\
 				   .groupBy(\
 				   	  groupSchema = keySchema, \
 				   	  aggSchema = aggSumSchema, \
 				   	  groupExpr = (lambda e: 0), \
-				   	  aggExprs = [(0, lambda acc, e:acc + l_extendedprice * (1 - l_discount), lambda x: x)], \
+				   	  aggExprs = [(0, lambda acc, e:acc + e.l_extendedprice * (1 - e.l_discount), lambda x: x)], \
 				   	  groupHashFn = (lambda gbVal: 0)) \
-				   .select({'promo_revenue': ('promo_revenue', 'int')}).finalize()
-
+				   .select({'promo_revenue': ('promo_revenue', 'double')}).finalize()
+"""
 """
 Optimization Option
 """
-# query2 = db.optimizer.optimizeQuery(query2)
+# query2 = db.optimizer.pushdownOperators(query2)
 """
 """
 

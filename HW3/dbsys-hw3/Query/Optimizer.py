@@ -87,19 +87,19 @@ class Optimizer:
     relationsInvolved = plan.relations()
     myRoot = plan.root
 
-    while root.operatorType() is "Select":
+    while myRoot.operatorType() is "Select":
       self.rawPredicates.append(root.selectExpr)
       myRoot = myRoot.subPlan.root
 
     myRoot = self.traverseTree(myRoot)
     newPlan = Plan(root = myRoot)
 
-    for rawPredicate in rawPredicates:
+    for rawPredicate in self.rawPredicates:
       decomposedPreds = ExpressionInfo(rawPredicate).decomposeCNF()
       for decomposedPred in decomposedPreds:
-        predicates.append(decomposedPred)
+        self.predicates.append(decomposedPred)
 
-    for predicate in predicates:
+    for predicate in self.predicates:
       predAttributes = ExpressionInfo(predicate).getAttributes()
       # Traverse the tree looking for any operator that contains
       # all of the attributes in predAttributes.
@@ -166,24 +166,24 @@ class Optimizer:
       curr.operatorType() is "Union":
       leftChild = curr.lhsPlan
       rightChild = curr.rhsPlan
-      while leftChild.root.operatorType() is "Select":
-        rawPredicates.append(leftChild.root.selectExpr)
+      while leftChild.operatorType() is "Select":
+        self.rawPredicates.append(leftChild.root.selectExpr)
         curr.lhsPlan = leftChild.subPlan
         leftChild = curr.lhsPlan
-      while rightChild.root.operatorType() is "Select":
-        rawPredicates.append(rightChild.root.selectExpr)
+      while rightChild.operatorType() is "Select":
+        self.rawPredicates.append(rightChild.selectExpr)
         curr.rhsPlan = rightChild.subPlan
         rightChild = curr.rhsPlan
-      curr.lhsPlan = self.traverseTree(leftChild.root)
-      curr.rhsPlan = self.traverseTree(rightChild.root)
+      curr.lhsPlan = self.traverseTree(leftChild)
+      curr.rhsPlan = self.traverseTree(rightChild)
     elif curr.operatorType() is "Project":
       childPlan = curr.subPlan
-      while childPlan.root.operatorType() is "Select":
-        rawPredicates.append(childPlan.root.selectExpr)
+      while childPlan.operatorType() is "Select":
+        self.rawPredicates.append(childPlan.root.selectExpr)
         curr.subPlan = childPlan.subPlan
         childPlan = curr.subPlan
-      curr.subPlan = self.traverseTree(childPlan.root)
-    else:
+      curr.subPlan = self.traverseTree(childPlan)
+    elif curr.operatorType() is "Select":
       curr.subPlan = self.traverseTree(curr.subPlan)
     return curr
 

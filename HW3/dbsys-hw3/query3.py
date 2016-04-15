@@ -26,7 +26,7 @@ group by
 """
 
 keySchema = DBSchema('groupByKey', [('L_ORDERKEY', 'int'), ('O_ORDERDATE', 'int'), ('O_SHIPPRIORITY', 'int')])
-aggSumSchema = DBSchema('revenue', [('revenue', 'int')])
+aggSumSchema = DBSchema('revenue', [('revenue', 'double')])
 lOrderKeySchema = DBSchema('orderkey',  [('L_ORDERKEY', 'int')])
 oOrderKeySchema = DBSchema('orderkey2',  [('O_ORDERKEY', 'int')])
 oCustKeySchema = DBSchema('custkey',  [('O_CUSTKEY', 'int')])
@@ -35,27 +35,25 @@ cCustKeySchema = DBSchema('custkey2',  [('C_CUSTKEY', 'int')])
 query3 = db.query().fromTable('customer') \
 				   .join(db.query().fromTable('orders') \
 				   		.join(db.query().fromTable('lineitem'), \
-							  method = 'hash', \
+							  method = 'nested-loops', \
 							  lhsKeySchema = oOrderKeySchema, \
 							  rhsKeySchema = lOrderKeySchema, \
-							  lhsHashFn = 'hash(O_ORDERKEY) % 13', \
-							  rhsHashFn = 'hash(L_ORDERKEY) % 13'), \
-						  method = 'hash', \
+							  expr = 'L_ORDERKEY == O_ORDERKEY'),\
+						  method = 'nested-loops', \
 						  lhsKeySchema = cCustKeySchema, \
 						  rhsKeySchema = oCustKeySchema, \
-						  lhsHashFn = 'hash(C_CUSTKEY) % 13', \
-						  rhsHashFn = 'hash(O_CUSTKEY) % 13') \
-				   .where('C_MKTSEGMENT = \'BUILDING\' and \
+					          expr = 'O_CUSTKEY == C_CUSTKEY') \
+				   .where("C_MKTSEGMENT = 'BUILDING' and \
 				   	       O_ORDERDATE < 19950315 and \
-				   	       L_SHIPDATE > 19950315') \
+				   	       L_SHIPDATE > 19950315") \
 				   .groupBy( \
 				   	  groupSchema = keySchema, \
 				   	  aggSchema = aggSumSchema, \
 				   	  groupExpr = (lambda e: (e.l_orderkey, e.o_orderdate, e.o_shippriority)), \
-				   	  aggExprs = [(0, lambda acc, e:acc + l_extendedprice * (1 - l_discount), lambda x: x)], \
+				   	  aggExprs = [(0, lambda acc, e:acc + e.l_extendedprice * (1 - e.l_discount), lambda x: x)], \
 				   	  groupHashFn = (lambda gbVal: hash((e.l_orderkey, e.o_orderdate, e.o_shippriority)) % 31)) \
 				   .select({'L_ORDERKEY': ('L_ORDERKEY', 'int'),
-				   			'revenue': ('revenue', 'int'),
+				   			'revenue': ('revenue', 'double'),
                           	'O_ORDERDATE': ('O_ORDERDATE', 'int'),
 				   			'O_SHIPPRIORITY':('O_SHIPPRIORITY', 'int')
 				   			}).finalize()
@@ -63,7 +61,7 @@ query3 = db.query().fromTable('customer') \
 """
 Optimization Option
 """
-# query3 = db.optimizer.optimizeQuery(query3)
+# query3 = db.optimizer.pushdownOperators(query3)
 """
 """
 

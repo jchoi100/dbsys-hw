@@ -29,7 +29,7 @@ group by
 """
 
 keySchema = DBSchema('groupByKey', [('N_NAME', 'char(25)')])
-aggSumSchema = DBSchema('revenue', [('revenue', 'int')])
+aggSumSchema = DBSchema('revenue', [('revenue', 'double')])
 
 lOrderKeySchema = DBSchema('orderkey',  [('L_ORDERKEY', 'int')])
 oOrderKeySchema = DBSchema('orderkey2',  [('O_ORDERKEY', 'int')])
@@ -49,51 +49,49 @@ query5 = db.query().fromTable('region') \
 						.join(db.query().fromTable('lineitem') \
 							.join(db.query().fromTable('orders') \
 								.join(db.query().fromTable('customer'), \
-									  method = 'hash', \
+									  method = 'nested-loops', \
 									  lhsKeySchema = oCustKeySchema, \
 									  rhsKeySchema = cCustKeySchema, \
-									  lhsHashFn = 'hash(O_CUSTKEY) % 13', \
-									  rhsHashFn = 'hash(C_CUSTKEY) % 13'), \
-								  method = 'hash', \
+									  expr = 'O_CUSTKEY == C_CUSTKEY'), \
+								  method = 'nested-loops', \
 								  lhsKeySchema = lOrderKeySchema, \
 								  rhsKeySchema = oOrderKeySchema, \
-								  lhsHashFn = 'hash(L_ORDERKEY) % 13', \
-								  rhsHashFn = 'hash(O_ORDERKEY) % 13'), \
-							  method = 'hash', \
+								  expr = 'O_ORDERKEY == L_ORDERKEY'), \
+							  method = 'nested-loops', \
 							  lhsKeySchema = sSuppKeySchema, \
 							  rhsKeySchema = lSuppKeySchema, \
-							  lhsHashFn = 'hash(S_SUPPKEY) % 13', \
-							  rhsHashFn = 'hash(L_SUPPKEY) % 13'), \
-						  method = 'hash', \
+							  expr = 'S_SUPPKEY == L_SUPPKEY'), \
+						  method = 'nested-loops', \
 						  lhsKeySchema = nNationKeySchema, \
 						  rhsKeySchema = sNationKeySchema, \
-						  lhsHashFn = 'hash(N_NATIONKEY) % 13', \
-						  rhsHashFn = 'hash(S_NATIONKEY) % 13'), \
-					  method = 'hash', \
+						  expr = 'N_NATIONKEY == S_NATIONKEY'), \
+					  method = 'nested-loops', \
 					  lhsKeySchema = rRegionKeySchema, \
 					  rhsKeySchema = nRegionKeySchema, \
-					  lhsHashFn = 'hash(R_REGIONKEY) % 13', \
-					  rhsHashFn = 'hash(N_REGIONKEY) % 13') \
-				   .where('R_NAME = \'ASIA\' and \
+					  expr = 'N_REGIONKEY == R_REGIONKEY') \
+				   .where("R_NAME = 'ASIA' and \
 				   	       O_ORDERDATE >= 19940101 and \
-				   	       O_ORDERDATE < 19950101') \
+				   	       O_ORDERDATE < 19950101") \
 				   .groupBy( \
 				   	  groupSchema = keySchema, \
 				   	  aggSchema = aggSumSchema, \
 				   	  groupExpr = (lambda e: e.n_name), \
-				   	  aggExprs = [(0, lambda acc, e:acc + l_extendedprice * (1 - l_discount), lambda x: x)], \
+				   	  aggExprs = [(0, lambda acc, e:acc + e.l_extendedprice * (1 - e.l_discount), lambda x: x)], \
 				   	  groupHashFn = (lambda gbVal: hash(e.n_name) % 31)) \
 				   .select({'N_NAME': ('N_NAME', 'char(25)'),
-				   			'revenue': ('revenue', 'int')
+				   			'revenue': ('revenue', 'double')
 				   			}).finalize()
 
 """
 Optimization Option
 """
-# query5 = db.optimizer.optimizeQuery(query5)
+# query5 = db.optimizer.pushdownOperators(query5)
 """
 """
-
+print("Explain: ")
+print(q5.explain())
+print("\n")
+print("Results: ")
 q5results = [query5.schema().unpack(tup) \
         for page in db.processQuery(query5) \
         for tup in page[1]]
