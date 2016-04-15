@@ -44,7 +44,7 @@ query3 = db.query().fromTable('customer') \
 						  lhsKeySchema = cCustKeySchema, \
 						  rhsKeySchema = oCustKeySchema, \
 						  lhsHashFn = 'hash(C_CUSTKEY) % 13', \
-						  rhsHashFn = 'hash(O_CUSTKEY) % 13'), \
+						  rhsHashFn = 'hash(O_CUSTKEY) % 13') \
 				   .where('c_mktsegment = \'BUILDING\' and \
 				   	       o_orderdate < 19950315 and \
 				   	       l_shipdate > 19950315') \
