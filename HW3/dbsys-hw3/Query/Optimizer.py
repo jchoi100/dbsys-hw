@@ -78,44 +78,6 @@ class Optimizer:
 
     return self.statsCache[cacheKey]
 
-  # curr: currNode
-  # d: currNode's depth in the original plan
-  def traverseTree(self, curr, d):
-    if curr.operatorType().endswith("Join") or \
-      curr.operatorType() is "Union":
-      leftChild = curr.lhsPlan
-      rightChild = curr.rhsPlan
-
-      dLeft = d
-      dRight = d
-
-      while leftChild.root.operatorType() is "Select":
-        rawPredicates.append((leftChild.root.selectExpr, dLeft + 1))
-        curr.lhsPlan = leftChild.subPlan
-        leftChild = curr.lhsPlan
-        dLeft += 1
-      while rightChild.root.operatorType() is "Select":
-        rawPredicates.append((rightChild.root.selectExpr, dRight + 1))
-        curr.rhsPlan = rightChild.subPlan
-        rightChild = curr.rhsPlan
-        dRight += 1
-
-      curr.lhsPlan = self.traverseTree(leftChild.root, dLeft)
-      curr.rhsPlan = self.traverseTree(rightChild.root, dRight)
-
-    elif curr.operatorType() is "Project":
-      childPlan = curr.subPlan
-      while childPlan.root.operatorType() is "Select":
-        rawPredicates.append((childPlan.root.selectExpr, d + 1))
-        curr.subPlan = childPlan.subPlan
-        childPlan = curr.subPlan
-        d += 1
-      curr.subPlan = self.traverseTree(childPlan.root, d)
-
-    else:
-      curr.subPlan = self.traverseTree(curr.subPlan, d)
-    return curr
-
   # Given a plan, return an optimized plan with both selection and
   # projection operations pushed down to their nearest defining relation
   # This does not need to cascade operators, but should determine a
@@ -124,14 +86,12 @@ class Optimizer:
     plan.prepare(self.db)
     relationsInvolved = plan.relations()
     myRoot = plan.root
-    d = 1
 
     while root.operatorType() is "Select":
-      self.rawPredicates.append((root.selectExpr, d))
+      self.rawPredicates.append(root.selectExpr)
       myRoot = myRoot.subPlan.root
-      d += 1
 
-    myRoot = self.traverseTree(myRoot, d)
+    myRoot = self.traverseTree(myRoot)
     newPlan = Plan(root = myRoot)
 
     for rawPredicate in rawPredicates:
@@ -195,6 +155,41 @@ class Optimizer:
         parentPlan.subPlan = selectToAdd
     return newPlan
 
+  # Traverse the plan tree while picking out the select operators.
+  # Save the picked out select operators in self.rawPredicates.
+  # Recursively traverse the tree. Upon returning from the previous
+  # recursion, save the result from the previous recursive call
+  # to curr's subPlan (or lhsPlan or rhsPlan depending on optype).
+  # @param curr: currNode
+  def traverseTree(self, curr):
+    if curr.operatorType().endswith("Join") or \
+      curr.operatorType() is "Union":
+      leftChild = curr.lhsPlan
+      rightChild = curr.rhsPlan
+      while leftChild.root.operatorType() is "Select":
+        rawPredicates.append(leftChild.root.selectExpr)
+        curr.lhsPlan = leftChild.subPlan
+        leftChild = curr.lhsPlan
+      while rightChild.root.operatorType() is "Select":
+        rawPredicates.append(rightChild.root.selectExpr)
+        curr.rhsPlan = rightChild.subPlan
+        rightChild = curr.rhsPlan
+      curr.lhsPlan = self.traverseTree(leftChild.root)
+      curr.rhsPlan = self.traverseTree(rightChild.root)
+    elif curr.operatorType() is "Project":
+      childPlan = curr.subPlan
+      while childPlan.root.operatorType() is "Select":
+        rawPredicates.append(childPlan.root.selectExpr)
+        curr.subPlan = childPlan.subPlan
+        childPlan = curr.subPlan
+      curr.subPlan = self.traverseTree(childPlan.root)
+    else:
+      curr.subPlan = self.traverseTree(curr.subPlan)
+    return curr
+
+  # Check if "firstSet" is a subset of "secondSet".
+  # Both input "set"s are python lists.
+  # Return True if so, False if not.
   def firstIsSubsetOfSecond(self, firstSet, secondSet):
     for elem in firstSet:
       if elem not in secondSet:
