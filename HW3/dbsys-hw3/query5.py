@@ -43,7 +43,7 @@ rRegionKeySchema = DBSchema('regionkey2',  [('R_REGIONKEY', 'int')])
 sSuppKeySchema = DBSchema('suppKey', [('S_SUPPKEY', 'int')])
 lSuppKeySchema = DBSchema('lsKey', [('L_SUPPKEY', 'int')])
 
-query4 = db.query().fromTable('region') \
+query5 = db.query().fromTable('region') \
 				.join(db.query().fromTable('nation') \
 					.join(db.query().fromTable('supplier') \
 						.join(db.query().fromTable('lineitem') \
@@ -74,9 +74,9 @@ query4 = db.query().fromTable('region') \
 					  rhsKeySchema = nRegionKeySchema, \
 					  lhsHashFn = 'hash(R_REGIONKEY) % 13', \
 					  rhsHashFn = 'hash(N_REGIONKEY) % 13') \
-				   .where('r_name = \'ASIA\' and \
-				   	       o_orderdate >= 19940101 and \
-				   	       o_orderdate < 19950101') \
+				   .where('R_NAME = \'ASIA\' and \
+				   	       O_ORDERDATE >= 19940101 and \
+				   	       O_ORDERDATE < 19950101') \
 				   .groupBy( \
 				   	  groupSchema = keySchema, \
 				   	  aggSchema = aggSumSchema, \

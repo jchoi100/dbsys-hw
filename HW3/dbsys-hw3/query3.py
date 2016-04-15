@@ -45,9 +45,9 @@ query3 = db.query().fromTable('customer') \
 						  rhsKeySchema = oCustKeySchema, \
 						  lhsHashFn = 'hash(C_CUSTKEY) % 13', \
 						  rhsHashFn = 'hash(O_CUSTKEY) % 13') \
-				   .where('c_mktsegment = \'BUILDING\' and \
-				   	       o_orderdate < 19950315 and \
-				   	       l_shipdate > 19950315') \
+				   .where('C_MKTSEGMENT = \'BUILDING\' and \
+				   	       O_ORDERDATE < 19950315 and \
+				   	       L_SHIPDATE > 19950315') \
 				   .groupBy( \
 				   	  groupSchema = keySchema, \
 				   	  aggSchema = aggSumSchema, \
