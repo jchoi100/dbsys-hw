@@ -2,7 +2,7 @@ import Database
 import Database
 from Catalog.Schema import DBSchema
 
-db = Database.Database(dataDir='./data')
+db = Database.Database(dataDir='./data/data-tpch-sf-0.001')
 
 """
 select
