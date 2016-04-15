@@ -19,7 +19,7 @@ where
 keySchema = DBSchema('att', [('att', 'int')])
 aggSumSchema = DBSchema('revenue', [('revenue', 'double')])
 
-query1 = db.query().fromTable('lineitem').where('L_SHIPDATE >= 19940101 and L_SHIPDATE m 19950101 and L_DISCOUNT < 0.07 and L_DISCOUNT > 0.05 and \
+query1 = db.query().fromTable('lineitem').where('L_SHIPDATE >= 19940101 and L_SHIPDATE < 19950101 and L_DISCOUNT < 0.07 and L_DISCOUNT > 0.05 and \
 				   	       L_QUANTITY < 24 ') \
 				   .groupBy(\
 				   	  groupSchema = keySchema, \
