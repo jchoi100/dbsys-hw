@@ -48,6 +48,8 @@ class Optimizer:
   def __init__(self, db):
     self.db = db
     self.statsCache = {}
+    self.rawPredicates = [] # list of CNF-formatted selectExprs
+    self.predicates = [] # list of CNF-decomposed selectExprs
 
   # Caches the cost of a plan computed during query optimization.
   def addPlanCost(self, plan, cost):
@@ -76,31 +78,43 @@ class Optimizer:
 
     return self.statsCache[cacheKey]
 
-  def traverseTree(self, curr, all_selects):
-
-    if curr.operatorType().endswith("Join") or\
-       curr.operatorType() is "Union":
+  # curr: currNode
+  # d: currNode's depth in the original plan
+  def traverseTree(self, curr, d):
+    if curr.operatorType().endswith("Join") or \
+      curr.operatorType() is "Union":
       leftChild = curr.lhsPlan
       rightChild = curr.rhsPlan
 
-      while leftChild.operatorType is "Select":
-        all_selects.append(leftChild.selectExpr)
+      dLeft = d
+      dRight = d
+
+      while leftChild.root.operatorType() is "Select":
+        rawPredicates.append((leftChild.root.selectExpr, dLeft + 1))
         curr.lhsPlan = leftChild.subPlan
         leftChild = curr.lhsPlan
-
-      while rightChild.operatorType() is "Select":
-        all_selects.append(rightChild.selectExpr)
+        dLeft += 1
+      while rightChild.root.operatorType() is "Select":
+        rawPredicates.append((rightChild.root.selectExpr, dRight + 1))
         curr.rhsPlan = rightChild.subPlan
         rightChild = curr.rhsPlan
+        dRight += 1
 
-      traverseTree(curr.lhsPlan, all_selects)
-      traverseTree(curr.rhsPlan, all_selects)
+      curr.lhsPlan = self.traverseTree(leftChild.root, dLeft)
+      curr.rhsPlan = self.traverseTree(rightChild.root, dRight)
+
+    elif curr.operatorType() is "Project":
+      childPlan = curr.subPlan
+      while childPlan.root.operatorType() is "Select":
+        rawPredicates.append((childPlan.root.selectExpr, d + 1))
+        curr.subPlan = childPlan.subPlan
+        childPlan = curr.subPlan
+        d += 1
+      curr.subPlan = self.traverseTree(childPlan.root, d)
 
     else:
-      traverseTree(curr.subPlan, all_selects)
-
-    return curr, all_selects
-
+      curr.subPlan = self.traverseTree(curr.subPlan, d)
+    return curr
 
   # Given a plan, return an optimized plan with both selection and
   # projection operations pushed down to their nearest defining relation
@@ -108,183 +122,84 @@ class Optimizer:
   # suitable ordering for selection predicates based on the cost model below.
   def pushdownOperators(self, plan):
     plan.prepare(self.db)
-    root = plan.root
-    all_relations_list = plan.relations()
-    all_selects = []
+    relationsInvolved = plan.relations()
+    myRoot = plan.root
+    d = 1
 
     while root.operatorType() is "Select":
-      all_selects.append(root.selectExpr)
-      root = root.subPlan
+      self.rawPredicates.append((root.selectExpr, d))
+      myRoot = myRoot.subPlan.root
+      d += 1
 
-    # new_root: root of new tree with all the selects removed.
-    # all_selects: list of all the select exprs from orig tree.
-    new_root, all_selects = traverseTree(root, all_selects)
+    myRoot = self.traverseTree(myRoot, d)
+    newPlan = Plan(root = myRoot)
 
-    newPlan = Plan(root = new_root)
+    for rawPredicate in rawPredicates:
+      decomposedPreds = ExpressionInfo(rawPredicate).decomposeCNF()
+      for decomposedPred in decomposedPreds:
+        predicates.append(decomposedPred)
 
-    # To be used to find out parent links.
-    allPlans = newPlan.flatten()
+    for predicate in predicates:
+      predAttributes = ExpressionInfo(predicate).getAttributes()
+      # Traverse the tree looking for any operator that contains
+      # all of the attributes in predAttributes.
+      # If the currOperator has all of them, check if currOperator's
+      # subPlan (or lhsPlan or rhsPlan depending on operatorType())
+      # also contains all of them. If so, go down deeper.
+      parentPlan = None
+      currPlan = newPlan
+      currPAttributes = currPlan.root.schema().fields
+      isLeftChild = False
+      while self.firstIsSubsetOfSecond(predAttributes, currPAttributes):
+        if currPlan.root.operatorType().endswith("Join") or \
+           currPlan.root.operatorType() is "Union":
+          leftChild = currPlan.root.lhsPlan
+          leftAttributes = leftChild.root.schema().fields
+          rightChild = currPlan.root.rhsPlan
+          rightAttributes = rightChild.root.schema().fields
 
-    # Place all cnf-decomposed expressions in the following list.
-    cnf_decomposed_selects = []
-    for predicate in all_selects:
-      decomposed = ExpressionInfo(predicate).decomposeCNF()
-      for expr in decomposed:
-        cnf_decomposed_selects.append(expr)
+          if self.firstIsSubsetOfSecond(predAttributes, leftAttributes):
+            parentPlan = currPlan
+            currPlan = leftChild
+            currPAttributes = currPlan.root.schema().fields
+            isLeftChild = True
+          elif self.firstIsSubsetOfSecond(predAttributes, rightAttributes):
+            parentPlan = currPlan
+            currPlan = rightChild
+            currPAttributes = currPlan.root.schema().fields
+            isLeftChild = False
+          else:
+            break
+        elif currPlan.root.operatorType() is "Project":
+          onlyChild = currOperator.subPlan
+          childAttributes = onlyChild.root.schema().fields
+          if self.firstIsSubsetOfSecond(predAttributes, childAttributes):
+            parentPlan = currPlan
+            currPlan = onlyChild
+            currPAttributes = currPlan.root.schema().fields
+        elif currPlan.root.operatorType() is "TableScan":
+          break
+        else:
+          currPlan = currPlan.subPlan
+          currPAttributes = currPlan.root.schema().fields
+      # Now, we know that the select statement should go between
+      # the parentOperator and currOperator.
+      selectToAdd = Select(subPlan = currPlan, selectExpr = predicate)
+      if parentPlan.operatorType()endswith("Join") or \
+           parentPlan.operatorType() is "Union":
+        if isLeftChild:
+          parentPlan.lhsPlan = selectToAdd
+        else:
+          parentPlan.rhsPlan = selectToAdd
+      else:
+        parentPlan.subPlan = selectToAdd
+    return newPlan
 
-    # Traverse through each select statement and see where they
-    # can go. Start from the bottom of the tree for each expr.
-
-    attribute_dict = {}
-    for relation in all_relations_list:
-      att_list = relation.schema().fields
-      for att in att_list:
-        attribute_dict[att] = relation
-
-    for predicate in cnf_decomposed_selects:
-
-
-"""
-"""
-
-  def firstSubsetOfSecond(self, firstSet, secondSet):
+  def firstIsSubsetOfSecond(self, firstSet, secondSet):
     for elem in firstSet:
       if elem not in secondSet:
         return False
     return True
-
-  def pushDownOperatorsObsolete(self, plan):
-    allPlans = plan.flatten()
-    toBePushedDown = deque()
-
-    for i in range(len(allPlans)):
-      root = plan.root
-      toBePushedDown.append(root)
-
-      while toBePushedDown:
-        currDepth, currOperator = toBePushedDown.popleft()
-        currOperatorType = currOperator.operatorType()
-
-        if currOperatorType is "Project" or currOperatorType is "Select":
-          if (currDepth + 1, currOperator.subPlan) in allPlans:
-            subPosition = allPlans.index((currDepth +  1, currOperator.subPlan))
-            subDepth, subOperator = allPlans[subPosition]
-            flag = False
-            subOperatorType = subOperator.operatorType()
-            # Case when child operator is a Project or Select
-            if subOperatorType is "Project" or subOperatorType is "Select":
-              # Push down currOperator to become subOperator's subplan
-              currOperator.subPlan = subOperator.subPlan
-              subOperator.subPlan = currOperator
-
-              currParentDepth = currDepth - 1
-              for depth, currParent in allPlans:
-                if depth == currParentDepth and currParent.subPlan is currOperator:
-                  currParent.subPlan = subOperator
-              toBePushedDown.extendleft((currDepth + 1, currOperator))
-            elif subOperatorType.endswith("Join") or subOperatorType is "Union":
-              lFields = subOperator.lhsPlan.schema().fields
-              rFields = subOperator.rhsPlan.schema().fields
-              currOperator.inputSchemas()[0].fields
-
-              if currOperatorType is "Project":
-                currExpr = currOperator.projectExprs
-                lExpr = {}
-                rExpr = {}
-
-                for field, value in currExpr.items():
-                  if field in lFields:
-                    lExpr[field] = value
-                  elif field in rFields:
-                    rExpr[field] = value
-                lProject = Project(subPlan = subOperator.lhsPlan, \
-                                   projectExprs = lExpr)
-                rProject = Project(subPlan = subOperator.rhsPlan, \
-                                   projectExprs = rExpr)
-                subOperator.lhsPlan = lProject
-                subOperator.rhsPlan = rProject
-
-                currParentDepth = currDepth - 1
-                for depth, currParent in allPlans:
-                  if depth == currParentDepth and\
-                     currParent.subPlan is currOperator:
-                    currParent.subPlan = subOperator
-                lProject = Project(subPlan = subOperator.lhsPlan, \
-                                   projectExprs = lExpr)
-                rProject = Project(subPlan = subOperator.rhsPlan, \
-                                   projectExprs = rExpr)
-
-                toBePushedDown.extendleft((currDepth + 1, lProject))
-                toBePushedDown.extendleft((currDepth + 1, rProject))
-
-              elif currOperatorType is "Select":
-                currExpr = currOperatorType.selectExpr
-                attributes = ExpressionInfo(currExpr).getAttributes()
-                exprs = ExpressionInfo(currExpr).decomposeCNF()
-
-                lExpr = ""
-                rExpr = ""
-                sExpr = ""
-                lAttributes = set()
-                rAttributes = set()
-
-                for attribute in attributes:
-                  if attribute in lFields:
-                    lAttributes.add(attribute)
-                  elif attribute in rFields:
-                    rAttributes.add(attribute)
-
-                for expr in exprs:
-                  exprAttributes = ExpressionInfo(exp).getAttributes()
-                  if exprAttributes.issubset(lAttributes):
-                    lExpr += (expr + " and ")
-                  elif exprAttributes.issubset(rAttributes):
-                    rExpr += (expr + " and ")
-                  else:
-                    sExpr += (expr + " and ")
-
-                # Slice off trailing " and " before.
-                if len(lExpr) > 1:
-                  if len(lExpr) > 5:
-                    lExpr = lExpr[0 : len(lExpr) - 5]
-                  lSelect = Select(subPlan = subOperator.lhsPlan, \
-                                   selectExpr = lExpr)
-                  subOperator.lhsPlan = lSelect
-
-                if len(rExpr) > 1:
-                  if len(rExpr) > 5:
-                    rExpr = rExpr[0 : len(rExpr) - 5]
-                  rSelect = Select(subPlan = subOperator.rhsPlan, \
-                                   selectExpr = rExpr)
-                  subOperator.rhsPlan = rSelect
-
-                if len(sExpr) > 1:
-                  if len(sExpr) > 5:
-                    sExpr = sExpr[0 : len(sExpr) - 5]
-                  flag = True
-                  sSelect = Select(subPlan = subOperator, selectExpr = sExpr)
-
-                currParentDepth = currDepth - 1
-                for depth, currParent in allPlans:
-                  if depth == currParentDepth and currParent.subPlan is currOperator:
-                    if not flag:
-                      currParent.subPlan = subOperator
-                    else:
-                      currParent.subPlan = sSelect
-                toBePushedDown.extendleft((currDepth + 1, lSelect))
-                toBePushedDown.extendleft((currDepth + 1, rSelect))
-
-            if currDepth == 0:
-              if not flag:
-                allPlans = Plan(root = subOperator).flatten()
-              else:
-                allPlans = Plan(root = flagSelect).flatten()
-            else:
-              (rootDepth, rootOperator) = root
-              allPlans = Plan(root = rooftOperator).flatten()
-            root = allPlans[0]
-
-    return Plan(root = allPlans[0])
 
   # Returns an optimized query plan with joins ordered via a System-R style
   # dyanmic programming algorithm. The plan cost should be compared with the
@@ -309,7 +224,6 @@ class Optimizer:
   def optimizeQuery(self, plan):
     pushedDown_plan = self.pushdownOperators(plan)
     joinPicked_plan = self.pickJoinOrder(pushedDown_plan)
-
     return joinPicked_plan
 
 if __name__ == "__main__":
