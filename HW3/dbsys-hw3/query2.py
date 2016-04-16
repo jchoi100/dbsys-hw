@@ -28,16 +28,15 @@ query2 = db.query().fromTable('lineitem')\
 				   	rhsKeySchema = rightKeySchema, \
 					) \
 				   .where('L_SHIPDATE >= 19950901 and \
-				   	       L_SHIPDATE < 19951001').finalize()
-"""\
-				   .groupBy(\
+				   	       L_SHIPDATE < 19951001') \
+				   .groupBy( \
 				   	  groupSchema = keySchema, \
 				   	  aggSchema = aggSumSchema, \
 				   	  groupExpr = (lambda e: 0), \
 				   	  aggExprs = [(0, lambda acc, e:acc + e.l_extendedprice * (1 - e.l_discount), lambda x: x)], \
 				   	  groupHashFn = (lambda gbVal: 0)) \
 				   .select({'promo_revenue': ('promo_revenue', 'double')}).finalize()
-"""
+
 """
 Optimization Option
 """
