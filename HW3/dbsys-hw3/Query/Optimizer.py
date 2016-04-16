@@ -88,7 +88,7 @@ class Optimizer:
     myRoot = plan.root
 
     while myRoot.operatorType() is "Select":
-      self.rawPredicates.append(root.selectExpr)
+      self.rawPredicates.append(myRoot.selectExpr)
       myRoot = myRoot.subPlan.root
 
     myRoot = self.traverseTree(myRoot)
