@@ -194,6 +194,8 @@ class Optimizer:
     elif curr.operatorType() is "Select":
       self.rawPredicates.append(curr.selectExpr)
       curr.subPlan = self.traverseTree(curr.subPlan)
+    else:
+      curr.subPlan = self.traverseTree(curr.subPlan)
     return curr
 
   # Check if "firstSet" is a subset of "secondSet".
