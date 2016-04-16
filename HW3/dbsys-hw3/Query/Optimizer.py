@@ -96,6 +96,7 @@ class Optimizer:
 
     for rawPredicate in self.rawPredicates:
       decomposedPreds = ExpressionInfo(rawPredicate).decomposeCNF()
+      print(decomposedPreds)
       for decomposedPred in decomposedPreds:
         self.predicates.append(decomposedPred)
 
@@ -198,7 +199,12 @@ class Optimizer:
     elif curr.operatorType() is "TableScan":
       return curr
     else:
-      curr.subPlan = self.traverseTree(curr.subPlan)
+      childPlan = curr.subPlan
+      while childPlan.operatorType() is "Select":
+        self.rawPredicates.append(childPlan.selectExpr)
+        curr.subPlan = childPlan.subPlan
+        childPlan = curr.subPlan
+      curr.subPlan = self.traverseTree(childPlan)
     return curr
 
   # Check if "firstSet" is a subset of "secondSet".
