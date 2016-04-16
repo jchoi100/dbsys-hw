@@ -88,6 +88,11 @@ Optimization Option
 optimized_query = db.optimizer.pushdownOperators(query)
 
 
+"""
+Join Order Option
+"""
+# join_optimized_query = db.optimizer.pickJoinOrder(query)
+
 print("Un-Optimized Explain: ")
 print(query.explain())
 # print("Un-Optimized Results: ")

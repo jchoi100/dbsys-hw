@@ -96,7 +96,6 @@ class Optimizer:
 
     for rawPredicate in self.rawPredicates:
       decomposedPreds = ExpressionInfo(rawPredicate).decomposeCNF()
-      print(decomposedPreds)
       for decomposedPred in decomposedPreds:
         self.predicates.append(decomposedPred)
 
@@ -106,6 +105,7 @@ class Optimizer:
     print("decomposedPreds: ")
     print(self.predicates)
 
+    # Reattach select predicates
     for predicate in self.predicates:
       predAttributes = ExpressionInfo(predicate).getAttributes()
       # Traverse the tree looking for any operator that contains
@@ -115,6 +115,8 @@ class Optimizer:
       # also contains all of them. If so, go down deeper.
       parentPlan = None
       currPlan = myRoot
+      if currPlan.operatorType() is "GroupBy":
+        currPlan = currPlan.subPlan
       # currPlan = newPlan.root
       currPAttributes = currPlan.schema().fields
       isLeftChild = False
