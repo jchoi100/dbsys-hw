@@ -152,14 +152,15 @@ class Optimizer:
       # Now, we know that the select statement should go between
       # the parentOperator and currOperator.
       selectToAdd = Select(subPlan = currPlan, selectExpr = predicate)
-      if parentPlan.operatorType().endswith("Join") or \
-           parentPlan.operatorType() is "Union":
-        if isLeftChild:
-          parentPlan.lhsPlan = selectToAdd
+      if parentPlan:
+        if parentPlan.operatorType().endswith("Join") or \
+             parentPlan.operatorType() is "Union":
+          if isLeftChild:
+            parentPlan.lhsPlan = selectToAdd
+          else:
+            parentPlan.rhsPlan = selectToAdd
         else:
-          parentPlan.rhsPlan = selectToAdd
-      else:
-        parentPlan.subPlan = selectToAdd
+          parentPlan.subPlan = selectToAdd
     return Plan(root = myRoot)
     # return newPlan
 
