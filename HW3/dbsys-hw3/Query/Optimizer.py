@@ -113,28 +113,18 @@ class Optimizer:
       # If the currOperator has all of them, check if currOperator's
       # subPlan (or lhsPlan or rhsPlan depending on operatorType())
       # also contains all of them. If so, go down deeper.
-      # print("\n")
-      # print("predicate:")
-      # print(predicate)
       parentPlan = None
       currPlan = myRoot
       if currPlan.operatorType() is "GroupBy":
         currPlan = currPlan.subPlan
-      # currPlan = newPlan.root
-      currPAttributes = currPlan.schema().fields
+
       isLeftChild = False
 
       currPlan = self.findFirstMatch(currPlan, predAttributes)
 
-      print("\n")
-      print(predAttributes)
-      print(currPlan.schema().fields)
+      currPAttributes = currPlan.schema().fields
 
       while self.firstIsSubsetOfSecond(predAttributes, currPAttributes):
-        # print("\n")
-        # print(currPAttributes)
-        # print(predAttributes)
-        # print("\n")
         if currPlan.operatorType().endswith("Join") or \
            currPlan.operatorType() is "Union":
           leftChild = currPlan.lhsPlan
@@ -169,9 +159,6 @@ class Optimizer:
       # Now, we know that the select statement should go between
       # the parentOperator and currOperator.
       selectToAdd = Select(subPlan = currPlan, selectExpr = predicate)
-      # print("\n")
-      # print("selectToAdd:")
-      # print(selectToAdd)
       if parentPlan:
         if parentPlan.operatorType().endswith("Join") or \
              parentPlan.operatorType() is "Union":
@@ -185,7 +172,6 @@ class Optimizer:
           selectToAdd.subPlan = parentPlan.subPlan
           parentPlan.subPlan = selectToAdd
     return Plan(root = myRoot)
-    # return newPlan
 
   def findFirstMatch(self, currPlan, predAttributes):
     currPAttributes = currPlan.schema().fields
