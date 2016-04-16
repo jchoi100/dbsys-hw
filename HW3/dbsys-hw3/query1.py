@@ -42,7 +42,7 @@ Pushdown Option
 """
 optimized_query = db.optimizer.pushdownOperators(query1)
 
-# print("\n")
+print("\n")
 print("Optimized Explain: ")
 print(optimized_query.explain())
 # print("Optimized Results: ")

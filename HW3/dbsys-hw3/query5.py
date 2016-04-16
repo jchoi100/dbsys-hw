@@ -99,7 +99,7 @@ optimized_query = db.optimizer.pushdownOperators(query5)
 """
 Join Order Option
 """
-# join_optimized_query = db.optimizer.pickJoinOrder(query)
+# join_optimized_query = db.optimizer.pickJoinOrder(query5)
 
 
 print("\n")

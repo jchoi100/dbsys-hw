@@ -69,6 +69,7 @@ optimized_query = db.optimizer.pushdownOperators(query3)
 #         for page in db.processQuery(query3) \
 #         for tup in page[1]]
 # print(qresults)
+
 print("\n")
 print("Optimized Explain: ")
 print(optimized_query.explain())
