@@ -56,14 +56,14 @@ query3 = db.query().fromTable('customer') \
 				   			'O_SHIPPRIORITY':('O_SHIPPRIORITY', 'int')
 				   			}).finalize()
 
+print("Un-Optimized Explain: ")
+print(query3.explain())
+
 """
 Optimization Option
 """
 optimized_query = db.optimizer.pushdownOperators(query3)
 
-
-print("Un-Optimized Explain: ")
-print(query3.explain())
 # print("Un-Optimized Results: ")
 # qresults = [query3.schema().unpack(tup) \
 #         for page in db.processQuery(query3) \
