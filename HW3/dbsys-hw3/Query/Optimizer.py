@@ -92,7 +92,7 @@ class Optimizer:
       myRoot = myRoot.subPlan
 
     myRoot = self.traverseTree(myRoot)
-    newPlan = Plan(root = myRoot)
+    # newPlan = Plan(root = myRoot)
 
     for rawPredicate in self.rawPredicates:
       decomposedPreds = ExpressionInfo(rawPredicate).decomposeCNF()
@@ -107,7 +107,8 @@ class Optimizer:
       # subPlan (or lhsPlan or rhsPlan depending on operatorType())
       # also contains all of them. If so, go down deeper.
       parentPlan = None
-      currPlan = newPlan.root
+      currPlan = myRoot
+      # currPlan = newPlan.root
       currPAttributes = currPlan.schema().fields
       isLeftChild = False
       while self.firstIsSubsetOfSecond(predAttributes, currPAttributes):
@@ -153,7 +154,8 @@ class Optimizer:
           parentPlan.rhsPlan = selectToAdd
       else:
         parentPlan.subPlan = selectToAdd
-    return newPlan
+    return Plan(root = myRoot)
+    # return newPlan
 
   # Traverse the plan tree while picking out the select operators.
   # Save the picked out select operators in self.rawPredicates.
