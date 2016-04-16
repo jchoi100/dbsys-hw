@@ -43,9 +43,7 @@ query3 = db.query().fromTable('customer') \
 						  lhsKeySchema = cCustKeySchema, \
 						  rhsKeySchema = oCustKeySchema, \
 					          expr = 'O_CUSTKEY == C_CUSTKEY') \
-				   .where('C_MKTSEGMENT = \'BUILDING\' and \
-				   		   O_ORDERDATE < 19950315 and \
-				   		   L_SHIPDATE > 19950315') \
+				   .where('C_MKTSEGMENT = \'BUILDING\' and O_ORDERDATE < 19950315 and L_SHIPDATE > 19950315') \
 				   .groupBy( \
 				   	  groupSchema = keySchema, \
 				   	  aggSchema = aggSumSchema, \
