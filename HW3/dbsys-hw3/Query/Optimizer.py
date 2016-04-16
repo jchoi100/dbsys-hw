@@ -124,7 +124,7 @@ class Optimizer:
       currPAttributes = currPlan.schema().fields
       isLeftChild = False
 
-      currPlan = findFirstMatch(currPlan, predAttributes)
+      currPlan = self.findFirstMatch(currPlan, predAttributes)
 
       while self.firstIsSubsetOfSecond(predAttributes, currPAttributes):
         # print("\n")
