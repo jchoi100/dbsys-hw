@@ -192,10 +192,10 @@ class Optimizer:
          currPlan.operatorType() is "GroupBy" or \
          currPlan.operatorType() is "Project":
         return self.findFirstMatch(currPlan.subPlan, predAttributes)
-      elif: currPlan.operatorType() is "TableScan":
+      elif currPlan.operatorType() is "TableScan":
         return None
-      elif: currPlan.operatorType() is "Union" or \
-            currPlan.operatorType().endswith("Join")
+      elif currPlan.operatorType() is "Union" or \
+            currPlan.operatorType().endswith("Join"):
         leftSearch = self.findFirstMatch(currPlan.lhsPlan, predAttributes)
         rightSearch = self.findFirstMatch(currPlan.rhsPlan, predAttributes)
         if leftSearch is not None:
