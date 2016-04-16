@@ -107,7 +107,7 @@ class Optimizer:
       # subPlan (or lhsPlan or rhsPlan depending on operatorType())
       # also contains all of them. If so, go down deeper.
       parentPlan = None
-      currPlan = newPlan
+      currPlan = newPlan.root
       currPAttributes = currPlan.schema().fields
       isLeftChild = False
       while self.firstIsSubsetOfSecond(predAttributes, currPAttributes):
