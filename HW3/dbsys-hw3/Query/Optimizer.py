@@ -113,9 +113,9 @@ class Optimizer:
       # If the currOperator has all of them, check if currOperator's
       # subPlan (or lhsPlan or rhsPlan depending on operatorType())
       # also contains all of them. If so, go down deeper.
-      print("\n")
-      print("predicate:")
-      print(predicate)
+      # print("\n")
+      # print("predicate:")
+      # print(predicate)
       parentPlan = None
       currPlan = myRoot
       if currPlan.operatorType() is "GroupBy":
@@ -158,17 +158,20 @@ class Optimizer:
       # Now, we know that the select statement should go between
       # the parentOperator and currOperator.
       selectToAdd = Select(subPlan = currPlan, selectExpr = predicate)
-      print("\n")
-      print("selectToAdd:")
-      print(selectToAdd)
+      # print("\n")
+      # print("selectToAdd:")
+      # print(selectToAdd)
       if parentPlan:
         if parentPlan.operatorType().endswith("Join") or \
              parentPlan.operatorType() is "Union":
           if isLeftChild:
+            selectToAdd.subPlan = parentPlan.lhsPlan
             parentPlan.lhsPlan = selectToAdd
           else:
+            selectToAdd.subPlan = parentPlan.rhsPlan
             parentPlan.rhsPlan = selectToAdd
         else:
+          selectToAdd.subPlan = parentPlan.subPlan
           parentPlan.subPlan = selectToAdd
     return Plan(root = myRoot)
     # return newPlan
