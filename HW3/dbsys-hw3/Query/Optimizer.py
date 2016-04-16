@@ -139,7 +139,7 @@ class Optimizer:
           else:
             break
         elif currPlan.operatorType() is "Project":
-          onlyChild = currOperator.subPlan
+          onlyChild = currPlan.subPlan
           childAttributes = onlyChild.schema().fields
           if self.firstIsSubsetOfSecond(predAttributes, childAttributes):
             parentPlan = currPlan
