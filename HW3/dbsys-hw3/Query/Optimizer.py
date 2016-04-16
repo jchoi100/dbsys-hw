@@ -214,19 +214,42 @@ class Optimizer:
   # dyanmic programming algorithm. The plan cost should be compared with the
   # use of the cost model below.
   def pickJoinOrder(self, plan):
-    # Retrieve all the subplans in this plan
-    allPlans = plan.flatten()
+    plan.prepare(self.db)
+    relationsInvolved = plan.relations()
+    myRoot = plan.root
 
     # For each pass, do:
     # 1) an enumeration of viable candidate plans for the given subsets of relations
     # 2) and an evaluation of the best plan in each subset
 
-    for i in range(len(allPlans)):
-      root = plan.root
 
-    cost = self.getPlanCost(plan)
+    # Maybe need to filter to the relations involved in the joins?
 
-    return Plan(root = allPlans[0])
+    joinList = list()
+
+    for i in len(relationsInvolved):
+      joinList.append(Plan(relationsInvolved[i]))
+
+    for i in len(relationsInvolved):
+      newList = list()
+      for j in joinList:
+        for k in relationsInvolved:
+          if k in j.relations():
+            #Test the different join orderings
+            oldFirst =  True
+            joinType = "block-nested-loops"
+            minCost = 2147483647
+
+            #Test the 2 orders and 2 kinds of join's costs. Return with the minimum
+            tempPlan = Plan()
+
+            cost = self.getPlanCost(tempPlan)
+
+            newList.append(tempPlan)
+
+      joinList = newList
+
+    return Plan(root = newList[0])
 
   # Optimize the given query plan, returning the resulting improved plan.
   # This should perform operation pushdown, followed by join order selection.
