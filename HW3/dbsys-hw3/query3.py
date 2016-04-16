@@ -44,8 +44,8 @@ query3 = db.query().fromTable('customer') \
 						  rhsKeySchema = oCustKeySchema, \
 					          expr = 'O_CUSTKEY == C_CUSTKEY') \
 				   .where("C_MKTSEGMENT = 'BUILDING' and \
-				   	       O_ORDERDATE < 19950315 and \
-				   	       L_SHIPDATE > 19950315") \
+				   		   O_ORDERDATE < 19950315 and \
+				   		   L_SHIPDATE > 19950315") \
 				   .groupBy( \
 				   	  groupSchema = keySchema, \
 				   	  aggSchema = aggSumSchema, \
@@ -66,16 +66,16 @@ optimized_query = db.optimizer.pushdownOperators(query3)
 
 print("Un-Optimized Explain: ")
 print(query3.explain())
-print("Un-Optimized Results: ")
-qresults = [query3.schema().unpack(tup) \
-        for page in db.processQuery(query3) \
-        for tup in page[1]]
-print(qresults)
+# print("Un-Optimized Results: ")
+# qresults = [query3.schema().unpack(tup) \
+#         for page in db.processQuery(query3) \
+#         for tup in page[1]]
+# print(qresults)
 print("\n")
 print("Optimized Explain: ")
 print(optimized_query.explain())
-print("Optimized Results: ")
-opt_qresults = [optimized_query.schema().unpack(tup) \
-        for page in db.processQuery(optimized_query) \
-        for tup in page[1]]
-print(opt_qresults)
+# print("Optimized Results: ")
+# opt_qresults = [optimized_query.schema().unpack(tup) \
+#         for page in db.processQuery(optimized_query) \
+#         for tup in page[1]]
+# print(opt_qresults)
