@@ -194,6 +194,8 @@ class Optimizer:
     elif curr.operatorType() is "Select":
       self.rawPredicates.append(curr.selectExpr)
       curr.subPlan = self.traverseTree(curr.subPlan)
+    elif curr.operatorType() is "TableScan":
+      return curr
     else:
       curr.subPlan = self.traverseTree(curr.subPlan)
     return curr
