@@ -128,7 +128,7 @@ class Optimizer:
 
       print("\n")
       print(predAttributes)
-      print(currPlan)
+      print(currPlan.explain())
 
       while self.firstIsSubsetOfSecond(predAttributes, currPAttributes):
         # print("\n")
