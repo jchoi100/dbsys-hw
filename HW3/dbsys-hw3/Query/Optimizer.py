@@ -89,7 +89,7 @@ class Optimizer:
 
     while myRoot.operatorType() is "Select":
       self.rawPredicates.append(myRoot.selectExpr)
-      myRoot = myRoot.subPlan.root
+      myRoot = myRoot.subPlan
 
     myRoot = self.traverseTree(myRoot)
     newPlan = Plan(root = myRoot)
@@ -108,40 +108,40 @@ class Optimizer:
       # also contains all of them. If so, go down deeper.
       parentPlan = None
       currPlan = newPlan
-      currPAttributes = currPlan.root.schema().fields
+      currPAttributes = currPlan.schema().fields
       isLeftChild = False
       while self.firstIsSubsetOfSecond(predAttributes, currPAttributes):
-        if currPlan.root.operatorType().endswith("Join") or \
-           currPlan.root.operatorType() is "Union":
-          leftChild = currPlan.root.lhsPlan
-          leftAttributes = leftChild.root.schema().fields
-          rightChild = currPlan.root.rhsPlan
-          rightAttributes = rightChild.root.schema().fields
+        if currPlan.operatorType().endswith("Join") or \
+           currPlan.operatorType() is "Union":
+          leftChild = currPlan.lhsPlan
+          leftAttributes = leftChild.schema().fields
+          rightChild = currPlan.rhsPlan
+          rightAttributes = rightChild.schema().fields
 
           if self.firstIsSubsetOfSecond(predAttributes, leftAttributes):
             parentPlan = currPlan
             currPlan = leftChild
-            currPAttributes = currPlan.root.schema().fields
+            currPAttributes = currPlan.schema().fields
             isLeftChild = True
           elif self.firstIsSubsetOfSecond(predAttributes, rightAttributes):
             parentPlan = currPlan
             currPlan = rightChild
-            currPAttributes = currPlan.root.schema().fields
+            currPAttributes = currPlan.schema().fields
             isLeftChild = False
           else:
             break
-        elif currPlan.root.operatorType() is "Project":
+        elif currPlan.operatorType() is "Project":
           onlyChild = currOperator.subPlan
-          childAttributes = onlyChild.root.schema().fields
+          childAttributes = onlyChild.schema().fields
           if self.firstIsSubsetOfSecond(predAttributes, childAttributes):
             parentPlan = currPlan
             currPlan = onlyChild
-            currPAttributes = currPlan.root.schema().fields
-        elif currPlan.root.operatorType() is "TableScan":
+            currPAttributes = currPlan.schema().fields
+        elif currPlan.operatorType() is "TableScan":
           break
         else:
           currPlan = currPlan.subPlan
-          currPAttributes = currPlan.root.schema().fields
+          currPAttributes = currPlan.schema().fields
       # Now, we know that the select statement should go between
       # the parentOperator and currOperator.
       selectToAdd = Select(subPlan = currPlan, selectExpr = predicate)
