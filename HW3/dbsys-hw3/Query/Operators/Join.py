@@ -26,6 +26,13 @@ class Join(Operator):
     self.initializeSchema()
     self.initializeMethod(**kwargs)
 
+    #For join cost computation uses
+    self.leftPageCount = 0
+    self.rightPageCount = 0
+    self.leftTupleCount = 0
+    self.leftTuplesPerPage = 0
+    self.bufferPoolSize = 0
+
   # Checks the join parameters.
   def validateJoin(self):
     # Valid join methods: "nested-loops", "block-nested-loops", "indexed", "hash"
@@ -130,11 +137,14 @@ class Join(Operator):
   #
   def nestedLoops(self):
     for (lPageId, lhsPage) in self.lhsPlan:
+      self.leftPageCount += 1
       for lTuple in lhsPage:
+        self.leftTupleCount += 1
         # Load the lhs once per inner loop.
         joinExprEnv = self.loadSchema(self.lhsSchema, lTuple)
 
         for (rPageId, rhsPage) in self.rhsPlan:
+          self.rightPageCount += 1
           for rTuple in rhsPage:
             # Load the RHS tuple fields.
             joinExprEnv.update(self.loadSchema(self.rhsSchema, rTuple))
@@ -147,6 +157,11 @@ class Join(Operator):
         # No need to track anything but the last output page when in batch mode.
         if self.outputPages:
           self.outputPages = [self.outputPages[-1]]
+
+    if self.leftPageCount is 0:
+      self.leftTuplesPerPage = 0
+    else:
+      self.leftTuplesPerPage = self.leftTupleCount / self.leftPageCount
 
     # Return an iterator to the output relation
     return self.storage.pages(self.relationId())
@@ -179,16 +194,23 @@ class Join(Operator):
   def blockNestedLoops(self):
     # Access the outer relation's block, pinning pages in the buffer pool.
     bufPool    = self.storage.bufferPool
+    self.bufferPoolSize = bufPool.size()
+
     lhsIter    = iter(self.lhsPlan)
     lPageBlock = self.accessPageBlock(bufPool, lhsIter)
 
+
     while lPageBlock:
       for (lPageId, lhsPage) in lPageBlock:
+        self.leftPageCount += 1
+
         for lTuple in lhsPage:
+          self.leftTupleCount += 1
           # Load the lhs once per inner loop.
           joinExprEnv = self.loadSchema(self.lhsSchema, lTuple)
 
           for (rPageId, rhsPage) in self.rhsPlan:
+            self.rightPageCount += 1
             for rTuple in rhsPage:
               # Load the RHS tuple fields.
               joinExprEnv.update(self.loadSchema(self.rhsSchema, rTuple))
@@ -209,6 +231,11 @@ class Join(Operator):
       # Move to the next page block after processing it.
       lPageBlock = self.accessPageBlock(bufPool, lhsIter)
 
+    if self.leftPageCount is 0:
+      self.leftTuplesPerPage = 0
+    else:
+      self.leftTuplesPerPage = self.leftTupleCount / self.leftPageCount
+
     # Return an iterator to the output relation
     return self.storage.pages(self.relationId())
 
@@ -217,7 +244,6 @@ class Join(Operator):
   #
   # Indexed nested loops implementation
   #
-  # TODO: test
   def indexedNestedLoops(self):
     if self.storage.getIndex(self.indexId) is None:
       raise ValueError("Missing index in storage manager: %s" % self.indexId)
@@ -264,12 +290,14 @@ class Join(Operator):
     # Partition the LHS and RHS inputs, creating a temporary file for each partition.
     # We assume one-level of partitioning is sufficient and skip recurring.
     for (lPageId, lPage) in self.lhsPlan:
+      self.leftPageCount += 1
       for lTuple in lPage:
         lPartEnv = self.loadSchema(self.lhsSchema, lTuple)
         lPartKey = eval(self.lhsHashFn, globals(), lPartEnv)
         self.emitPartitionTuple(lPartKey, lTuple, left=True)
 
     for (rPageId, rPage) in self.rhsPlan:
+      self.rightPageCount += 1
       for rTuple in rPage:
         rPartEnv = self.loadSchema(self.rhsSchema, rTuple)
         rPartKey = eval(self.rhsHashFn, globals(), rPartEnv)
@@ -361,6 +389,27 @@ class Join(Operator):
         ))) + ")"
 
     return super().explain() + exprs
+
+  #Overriding default Operator method
+  def cost(self, estimated):
+    joinCost = 0
+
+    #Reference: DBSys Lecture 7 Slide 21
+    if self.joinMethod is 'nested-loops':
+      joinCost += self.leftPageCount + (self.leftTuplesPerPage * self.rightPageCount);
+
+    #Reference: DBSys Lecture 8 Slide 2
+    if self.joinMethod is 'block-nested-loops':
+      joinCost += self.leftPageCount + ((self.leftPageCount / (self.bufferPoolSize - 2)) * self.rightPageCount)
+
+    #Reference: DBSys Lecture 8 Slide 2
+    if self.joinMethod == 'hash':
+      joinCost += 3 * (self.leftPageCount + self.rightPageCount)
+
+    subplanCost = sum(map(lambda x: x.cost(estimated), self.inputs()))
+    totalCost = joinCost + subplanCost
+    return totalCost
+
 
 # An iterator class for looping over pairs of pages from partition files.
 class PartitionIterator:

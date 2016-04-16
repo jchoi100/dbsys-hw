@@ -19,6 +19,14 @@ class GroupBy(Operator):
     self.validateGroupBy()
     self.initializeSchema()
 
+    self.numTotalTups = 0
+
+    # TODO possible to be used?
+    self.pageCount = 0
+    self.tupleCount = 0
+    self.partitionCount = 0
+    self.aggregationCount = 0
+
   # Perform some basic checking on the group-by operator's parameters.
   def validateGroupBy(self):
     requireAllValid = [self.subPlan, \
@@ -92,19 +100,28 @@ class GroupBy(Operator):
   def processAllPages(self):
     # Create partitions of the input records by hashing the group-by values
     for (pageId, page) in self.subPlan:
+
+      self.pageCount += 1
+
       for tup in page:
+        self.tupleCount += 1
         groupVal = self.ensureTuple(self.groupExpr(self.subSchema.unpack(tup)))
         groupId = self.groupHashFn(groupVal)
+
+        self.partitionCount += 1
         self.emitPartitionTuple(groupId, tup)
 
     # We assume that the partitions fit in main memory.
     for partRelId in self.partitionFiles.values():
+      self.partitionCount += 1
       partFile = self.storage.fileMgr.relationFile(partRelId)[1]
 
       # Use an in-memory Python dict to accumulate the aggregates.
       aggregates = {}
       for (pageId, page) in partFile.pages():
+        self.pageCount += 1
         for tup in page:
+          self.tupleCount += 1
           # Evaluate group-by value.
           namedTup = self.subSchema.unpack(tup)
           groupVal = self.ensureTuple(self.groupExpr(namedTup))
@@ -113,6 +130,7 @@ class GroupBy(Operator):
           if groupVal not in aggregates:
             aggregates[groupVal] = self.initialExprs()
 
+          self.aggregationCount += 1
           # Increment the aggregate.
           aggregates[groupVal] = \
             list(map( \
@@ -121,13 +139,19 @@ class GroupBy(Operator):
 
       # Finalize the aggregate value for each group.
       for (groupVal, aggVals) in aggregates.items():
+        self.aggregationCount += 1
+
         finalVals = list(map(lambda x: x[0](x[1]), zip(self.finalizeExprs(), aggVals)))
         outputTuple = self.outputSchema.instantiate(*(list(groupVal) + finalVals))
+
+        self.partitionCount += 1
         self.emitOutputTuple(self.outputSchema.pack(outputTuple))
 
       # No need to track anything but the last output page when in batch mode.
       if self.outputPages:
         self.outputPages = [self.outputPages[-1]]
+
+    self.numPartitions = len(self.partitionFiles.values())
 
     # Clean up partitions.
     self.removePartitionFiles()
@@ -165,3 +189,11 @@ class GroupBy(Operator):
   def explain(self):
     return super().explain() + "(groupSchema=" + self.groupSchema.toString() \
                              + ", aggSchema=" + self.aggSchema.toString() + ")"
+
+    #Overriding default Operator method
+  def cost(self, estimated):
+    # These seem to be the useful statistics.
+    groupCost =  self.pageCount + self.partitionCount + self.tupleCount + self.aggregationCount
+
+    subplanCost = sum(map(lambda x: x.cost(estimated), self.inputs()))
+    return groupCost + subplanCost
