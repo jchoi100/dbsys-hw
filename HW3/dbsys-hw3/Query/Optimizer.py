@@ -124,6 +124,10 @@ class Optimizer:
       currPAttributes = currPlan.schema().fields
       isLeftChild = False
       while self.firstIsSubsetOfSecond(predAttributes, currPAttributes):
+        print("\n")
+        print(currPAttributes)
+        print(predAttributes)
+        print("\n")
         if currPlan.operatorType().endswith("Join") or \
            currPlan.operatorType() is "Union":
           leftChild = currPlan.lhsPlan
