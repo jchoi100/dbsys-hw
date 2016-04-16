@@ -99,11 +99,11 @@ class Optimizer:
       for decomposedPred in decomposedPreds:
         self.predicates.append(decomposedPred)
 
-    print("rawPredicates: ")
-    print(self.rawPredicates)
+    # print("rawPredicates: ")
+    # print(self.rawPredicates)
 
-    print("decomposedPreds: ")
-    print(self.predicates)
+    # print("decomposedPreds: ")
+    # print(self.predicates)
 
     # Reattach select predicates
     for predicate in self.predicates:
