@@ -64,9 +64,9 @@ query4 = db.query().fromTable('nation') \
 					  lhsKeySchema = nNationKeySchema, \
 					  rhsKeySchema = cNationKeySchema, \
 					  expr = 'C_NATIONKEY == N_NATIONKEY') \
-				   .where("O_ORDERDATE >= 19931001 and \
+				   .where('O_ORDERDATE >= 19931001 and \
 				   	       O_ORDERDATE < 19940101 and \
-				   	       L_RETURNFLAG = 'R'") \
+				   	       L_RETURNFLAG = \'R\'') \
 				   .groupBy( \
 				   	  groupSchema = keySchema, \
 				   	  aggSchema = aggSumSchema, \
