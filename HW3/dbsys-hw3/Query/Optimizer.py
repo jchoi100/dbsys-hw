@@ -123,11 +123,14 @@ class Optimizer:
       # currPlan = newPlan.root
       currPAttributes = currPlan.schema().fields
       isLeftChild = False
+
+      currPlan = findFirstMatch(currPlan, predAttributes)
+
       while self.firstIsSubsetOfSecond(predAttributes, currPAttributes):
-        print("\n")
-        print(currPAttributes)
-        print(predAttributes)
-        print("\n")
+        # print("\n")
+        # print(currPAttributes)
+        # print(predAttributes)
+        # print("\n")
         if currPlan.operatorType().endswith("Join") or \
            currPlan.operatorType() is "Union":
           leftChild = currPlan.lhsPlan
@@ -179,6 +182,26 @@ class Optimizer:
           parentPlan.subPlan = selectToAdd
     return Plan(root = myRoot)
     # return newPlan
+
+  def findFirstMatch(self, currPlan, predAttributes):
+    currPAttributes = currPlan.schema().fields
+    if self.firstIsSubsetOfSecond(predAttributes, currPAttributes):
+      return currPlan
+    else:
+      if currPlan.operatorType() is "Select" or \
+         currPlan.operatorType() is "GroupBy" or \
+         currPlan.operatorType() is "Project":
+        return self.findFirstMatch(currPlan.subPlan, predAttributes)
+      elif: currPlan.operatorType() is "TableScan":
+        return None
+      elif: currPlan.operatorType() is "Union" or \
+            currPlan.operatorType().endswith("Join")
+        leftSearch = self.findFirstMatch(currPlan.lhsPlan, predAttributes)
+        rightSearch = self.findFirstMatch(currPlan.rhsPlan, predAttributes)
+        if leftSearch is not None:
+          return leftSearch
+        else:
+          return rightSearch
 
   # Traverse the plan tree while picking out the select operators.
   # Save the picked out select operators in self.rawPredicates.
