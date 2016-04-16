@@ -175,7 +175,7 @@ class Optimizer:
       leftChild = curr.lhsPlan
       rightChild = curr.rhsPlan
       while leftChild.operatorType() is "Select":
-        self.rawPredicates.append(leftChild.root.selectExpr)
+        self.rawPredicates.append(leftChild.selectExpr)
         curr.lhsPlan = leftChild.subPlan
         leftChild = curr.lhsPlan
       while rightChild.operatorType() is "Select":
@@ -187,11 +187,12 @@ class Optimizer:
     elif curr.operatorType() is "Project":
       childPlan = curr.subPlan
       while childPlan.operatorType() is "Select":
-        self.rawPredicates.append(childPlan.root.selectExpr)
+        self.rawPredicates.append(childPlan.selectExpr)
         curr.subPlan = childPlan.subPlan
         childPlan = curr.subPlan
       curr.subPlan = self.traverseTree(childPlan)
     elif curr.operatorType() is "Select":
+      self.rawPredicates.append(curr.selectExpr)
       curr.subPlan = self.traverseTree(curr.subPlan)
     return curr
 
