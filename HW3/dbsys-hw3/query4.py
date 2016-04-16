@@ -65,8 +65,7 @@ query4 = db.query().fromTable('nation') \
 					  rhsKeySchema = cNationKeySchema, \
 					  expr = 'C_NATIONKEY == N_NATIONKEY') \
 				   .where('O_ORDERDATE >= 19931001 and \
-				   	       O_ORDERDATE < 19940101 and \
-				   	       L_RETURNFLAG = \'R\'') \
+				   	       O_ORDERDATE < 19940101') \
 				   .groupBy( \
 				   	  groupSchema = keySchema, \
 				   	  aggSchema = aggSumSchema, \
@@ -83,12 +82,6 @@ query4 = db.query().fromTable('nation') \
 							'C_COMMENT': ('C_COMMENT', 'char(117)')
 				   			}).finalize()
 
-"""
-Optimization Option
-"""
-optimized_query = db.optimizer.pushdownOperators(query4)
-
-
 print("Un-Optimized Explain: ")
 print(query4.explain())
 # print("Un-Optimized Results: ")
@@ -96,6 +89,12 @@ print(query4.explain())
 #         for page in db.processQuery(query4) \
 #         for tup in page[1]]
 # print(qresults)
+
+"""
+Pushdown Option
+"""
+optimized_query = db.optimizer.pushdownOperators(query4)
+
 print("\n")
 print("Optimized Explain: ")
 print(optimized_query.explain())

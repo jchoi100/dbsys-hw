@@ -60,7 +60,7 @@ print("Un-Optimized Explain: ")
 print(query3.explain())
 
 """
-Optimization Option
+Pushdown Option
 """
 optimized_query = db.optimizer.pushdownOperators(query3)
 

@@ -28,11 +28,6 @@ query1 = db.query().fromTable('lineitem').where('L_SHIPDATE >= 19940101 and L_SH
 				   	  groupHashFn = (lambda gbVal: 0)) \
 				   .select({'revenue': ('revenue', 'double')}).finalize()
 
-"""
-Optimization Option
-"""
-optimized_query = db.optimizer.pushdownOperators(query1)
-
 
 print("Un-Optimized Explain: ")
 print(query1.explain())
@@ -42,10 +37,12 @@ print(query1.explain())
 #         for tup in page[1]]
 # print(qresults)
 
+"""
+Pushdown Option
+"""
+optimized_query = db.optimizer.pushdownOperators(query1)
 
 # print("\n")
-
-
 print("Optimized Explain: ")
 print(optimized_query.explain())
 # print("Optimized Results: ")

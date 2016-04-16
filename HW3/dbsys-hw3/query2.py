@@ -36,12 +36,6 @@ query2 = db.query().fromTable('lineitem')\
 				   	  groupHashFn = (lambda gbVal: 0)) \
 				   .select({'promo_revenue': ('promo_revenue', 'double')}).finalize()
 
-"""
-Optimization Option
-"""
-optimized_query = db.optimizer.pushdownOperators(query2)
-
-
 print("Un-Optimized Explain: ")
 print(query2.explain())
 # print("Un-Optimized Results: ")
@@ -49,6 +43,12 @@ print(query2.explain())
 #         for page in db.processQuery(query2) \
 #         for tup in page[1]]
 # print(qresults)
+
+"""
+Pushdown Option
+"""
+optimized_query = db.optimizer.pushdownOperators(query2)
+
 print("\n")
 print("Optimized Explain: ")
 print(optimized_query.explain())
