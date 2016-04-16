@@ -99,6 +99,12 @@ class Optimizer:
       for decomposedPred in decomposedPreds:
         self.predicates.append(decomposedPred)
 
+    print("rawPredicates: ")
+    print(self.rawPredicates)
+
+    print("decomposedPreds: ")
+    print(self.predicates)
+
     for predicate in self.predicates:
       predAttributes = ExpressionInfo(predicate).getAttributes()
       # Traverse the tree looking for any operator that contains
