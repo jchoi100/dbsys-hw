@@ -126,6 +126,10 @@ class Optimizer:
 
       currPlan = self.findFirstMatch(currPlan, predAttributes)
 
+      print("\n")
+      print(predAttributes)
+      print(currPlan)
+
       while self.firstIsSubsetOfSecond(predAttributes, currPAttributes):
         # print("\n")
         # print(currPAttributes)
