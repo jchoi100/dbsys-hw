@@ -254,7 +254,7 @@ class Optimizer:
   def pickJoinOrder(self, plan):
     plan.prepare(self.db)
 
-    preJoin = self.getJoins(self, plan)
+    preJoin = self.getJoins(plan)
 
 
     # For each pass, do:
