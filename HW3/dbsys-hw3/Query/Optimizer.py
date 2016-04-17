@@ -301,14 +301,14 @@ class Optimizer:
           foundJoin = True
 
           if prevNode.operatorType() is "Project" or "Select" or "TableScan" or "GroupBy":
-            prevNode.subplan = None
+            prevNode.subPlan = None
 
           elif prevNode.operatorType() is "Union":
             prevNode.lhsPlan = None
 
         elif currNode.operatorType() is "Project" or "Select" or "TableScan" or "GroupBy":
           prevNode = currNode
-          currNode = currNode.subplan
+          currNode = currNode.subPlan
 
         elif currNode.operatorType() is "Union":
           prevNode = currNode
@@ -317,7 +317,7 @@ class Optimizer:
       elif foundJoin is True:
         if currNode.operatorType() is "Project" or "Select" or "TableScan" or "GroupBy":
           prevNode = currNode
-          currNode = currNode.subplan
+          currNode = currNode.subPlan
 
         elif currNode.operatorType() is "Union":
           prevNode = currNode
