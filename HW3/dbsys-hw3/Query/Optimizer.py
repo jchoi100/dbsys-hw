@@ -150,13 +150,14 @@ class Optimizer:
         elif currPlan.operatorType() is "TableScan":
           break
         else:
+          parentPlan = currPlan
           currPlan = currPlan.subPlan
           currPAttributes = currPlan.schema().fields
       # Now, we know that the select statement should go between
       # the parentOperator and currOperator.
       selectToAdd = Select(subPlan = currPlan, selectExpr = predicate)
+      print(parentPlan)
       if parentPlan:
-        print(parentPlan)
         if parentPlan.operatorType().endswith("Join") or \
              parentPlan.operatorType() is "Union":
           if isLeftChild:
