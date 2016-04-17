@@ -299,11 +299,13 @@ class Optimizer:
     prevNode = plan.root
 
     while currNode is not None:
+      currType = currNode.operatorType()
+      prevType = prevNode.operatorType()
       if foundJoin is False:
-        if currNode.operatorType() is "Join":
+        if "Join" in  currType):
           foundJoin = True
 
-          if prevNode.operatorType() is "Project" or "Select" or "TableScan" or "GroupBy":
+          if prevType is "Project" or "Select" or "TableScan" or "GroupBy":
             prevNode.subPlan = None
 
           elif prevNode.operatorType() is "Union":
@@ -317,13 +319,18 @@ class Optimizer:
             currNode = currNode.subPlan
 
         elif currNode.operatorType() is "Union":
-          prevNode = currNode
+          prevNode = currNodee
           if currNode.lhsPlan is None:
             currNode = None
           else:
             currNode = currNode.lhsPlan
 
       elif foundJoin is True:
+
+        if "Join" in currNode.operatorType():
+          self.joinList.append(currNode.rhsPlan)
+          self.joinList.append(self.getJoins(Plan(currNode.lhsPlan))
+
         if currNode.operatorType() is "Project" or "Select" or "TableScan" or "GroupBy":
           prevNode = currNode
           if currNode.subPlan is None:
@@ -337,12 +344,6 @@ class Optimizer:
             currNode = None
           else:
             currNode = currNode.lhsPlan
-
-        elif currNode.operatorType() is "Join":
-          self.joinList.append(currNode.rhsPlan)
-          self.joinList.append(self.getJoins(Plan(currNode.lhsPlan)))
-          #self.joinList.append(currNode.lhsPlan)
-          #currNode = currNode.lhsPlan
 
     return preJoin
 
