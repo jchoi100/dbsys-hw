@@ -40,6 +40,10 @@ query2 = db.query().fromTable('lineitem')\
 """
 Un-Optimized Version
 """
+optimized_query = db.optimizer.pushdownOperators(query2)
+
+#joined_query = db.optimizer.pickJoinOrder(query2)
+
 print("Un-Optimized Explain: ")
 print(query2.explain())
 # print("Un-Optimized Results: ")
@@ -66,4 +70,4 @@ JoinOrder Option
 """
 joined_query = db.optimizer.pickJoinOrder(query2)
 print("\nBroken down joins:")
-print(db.optimizer.joinList)
+#print(db.optimizer.joinList)

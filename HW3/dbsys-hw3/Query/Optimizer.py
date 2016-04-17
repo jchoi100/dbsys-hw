@@ -1,5 +1,6 @@
 import itertools
 import pdb
+import copy
 from collections import deque
 from Query.Plan import Plan
 from Query.Operators.Join import Join
@@ -289,45 +290,61 @@ class Optimizer:
   def getJoins(self, plan):
     #Everything up to the first join.
 
-    preJoin = copy.deepcopy(plan)
+
+    #preJoin = plan
+    preJoin = copy.copy(plan)
     foundJoin = False
 
     currNode = plan.root
     prevNode = plan.root
 
     while currNode is not None:
+      currType = currNode.operatorType()
+      prevType = prevNode.operatorType()
+
       if foundJoin is False:
-        if currNode.operatorType() is "Join":
+        if "Join" in currType:
           foundJoin = True
 
-          if prevNode.operatorType() is "Project" or "Select" or "TableScan" or "GroupBy":
-            prevNode.subplan = None
+          if prevType is "Project" or prevType is "Select" or prevType is "TableScan" or prevType is "GroupBy":
+            prevNode.subPlan = None
 
-          elif prevNode.operatorType() is "Union":
+          elif prevType is "Union":
             prevNode.lhsPlan = None
 
-        elif currNode.operatorType() is "Project" or "Select" or "TableScan" or "GroupBy":
+        elif currType is "Project" or currType is "Select" or currType is "TableScan" or currType is "GroupBy":
           prevNode = currNode
-          currNode = currNode.subplan
+          if currNode.subPlan is None:
+            currNode = None
+          else:
+            currNode = currNode.subPlan
 
-        elif currNode.operatorType() is "Union":
-          prevNode = currNode
-          currNode = currNode.lhsPlan
+        elif currType is "Union":
+          prevNode = currNodee
+          if currNode.lhsPlan is None:
+            currNode = None
+          else:
+            currNode = currNode.lhsPlan
 
       elif foundJoin is True:
-        if currNode.operatorType() is "Project" or "Select" or "TableScan" or "GroupBy":
-          prevNode = currNode
-          currNode = currNode.subplan
 
-        elif currNode.operatorType() is "Union":
-          prevNode = currNode
-          currNode = currNode.lhsPlan
-
-        elif currNode.operatorType() is "Join":
+        if "Join" in currType:
           self.joinList.append(currNode.rhsPlan)
-          self.joinList.append(self.getJoins(Plan(currNode.lhsPlan)))
-          #self.joinList.append(currNode.lhsPlan)
-          #currNode = currNode.lhsPlan
+          self.joinList.append(self.getJoins(Plan(currNode.lhsPlan))
+
+        if (currType == "Project" or currType == "Select" or currType == "TableScan" or currType == "GroupBy"):
+          prevNode = currNode
+          if currNode.subPlan is None:
+            currNode = None
+          else:
+            currNode = currNode.subPlan
+
+        elif currType is "Union":
+          prevNode = currNode
+          if currNode.lhsPlan is None:
+            currNode = None
+          else:
+            currNode = currNode.lhsPlan
 
     return preJoin
 
