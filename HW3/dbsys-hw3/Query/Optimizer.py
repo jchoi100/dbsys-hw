@@ -290,7 +290,7 @@ class Optimizer:
   def getJoins(self, plan):
     #Everything up to the first join.
 
-    
+
     #preJoin = plan
     preJoin = copy.copy(plan)
     foundJoin = False
@@ -302,23 +302,25 @@ class Optimizer:
       currType = currNode.operatorType()
       prevType = prevNode.operatorType()
       if foundJoin is False:
-        if "Join" in  currType):
+        if "Join" in  currType:
           foundJoin = True
 
-          if prevType is "Project" or "Select" or "TableScan" or "GroupBy":
+          if prevType is "Project" or prevType is "Select"\
+          or prevType is "TableScan" or prevType is "GroupBy":
             prevNode.subPlan = None
 
-          elif prevNode.operatorType() is "Union":
+          elif prevType is "Union":
             prevNode.lhsPlan = None
 
-        elif currNode.operatorType() is "Project" or "Select" or "TableScan" or "GroupBy":
+        elif currType is "Project" or currType is "Select" or\
+        currType is "TableScan" or currType is "GroupBy":
           prevNode = currNode
           if currNode.subPlan is None:
             currNode = None
           else:
             currNode = currNode.subPlan
 
-        elif currNode.operatorType() is "Union":
+        elif currType is "Union":
           prevNode = currNodee
           if currNode.lhsPlan is None:
             currNode = None
@@ -327,18 +329,19 @@ class Optimizer:
 
       elif foundJoin is True:
 
-        if "Join" in currNode.operatorType():
+        if "Join" in currType:
           self.joinList.append(currNode.rhsPlan)
           self.joinList.append(self.getJoins(Plan(currNode.lhsPlan))
 
-        if currNode.operatorType() is "Project" or "Select" or "TableScan" or "GroupBy":
+        elif currType is "Project" or currType is "Select" or\n
+        currType is "TableScan" or currType is "GroupBy":
           prevNode = currNode
           if currNode.subPlan is None:
             currNode = None
           else:
             currNode = currNode.subPlan
 
-        elif currNode.operatorType() is "Union":
+        elif currType is "Union":
           prevNode = currNode
           if currNode.lhsPlan is None:
             currNode = None
