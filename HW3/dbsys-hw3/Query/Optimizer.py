@@ -99,12 +99,6 @@ class Optimizer:
       for decomposedPred in decomposedPreds:
         self.predicates.append(decomposedPred)
 
-    # print("rawPredicates: ")
-    # print(self.rawPredicates)
-
-    # print("decomposedPreds: ")
-    # print(self.predicates)
-
     # Reattach select predicates
     for predicate in self.predicates:
       predAttributes = ExpressionInfo(predicate).getAttributes()
@@ -119,9 +113,7 @@ class Optimizer:
         currPlan = currPlan.subPlan
 
       isLeftChild = False
-
       currPlan = self.findFirstMatch(currPlan, predAttributes)
-
       currPAttributes = currPlan.schema().fields
 
       while self.firstIsSubsetOfSecond(predAttributes, currPAttributes):
@@ -175,6 +167,9 @@ class Optimizer:
 
   def findFirstMatch(self, currPlan, predAttributes):
     currPAttributes = currPlan.schema().fields
+    print("\n")
+    print(predAttributes)
+    print(currPAttributes)
     if self.firstIsSubsetOfSecond(predAttributes, currPAttributes):
       return currPlan
     else:
