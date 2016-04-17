@@ -116,9 +116,9 @@ class Optimizer:
       currPlan = self.findFirstMatch(currPlan, predAttributes)
       currPAttributes = currPlan.schema().fields
 
-      print("\n")
-      print(currPlan.schema().fields)
-      print(predAttributes)
+      # print("\n")
+      # print(currPlan.schema().fields)
+      # print(predAttributes)
 
       while self.firstIsSubsetOfSecond(predAttributes, currPAttributes):
         if currPlan.operatorType().endswith("Join") or \
@@ -156,6 +156,7 @@ class Optimizer:
       # the parentOperator and currOperator.
       selectToAdd = Select(subPlan = currPlan, selectExpr = predicate)
       if parentPlan:
+        print(parentPlan)
         if parentPlan.operatorType().endswith("Join") or \
              parentPlan.operatorType() is "Union":
           if isLeftChild:
@@ -167,6 +168,9 @@ class Optimizer:
         else:
           selectToAdd.subPlan = parentPlan.subPlan
           parentPlan.subPlan = selectToAdd
+      else:
+        selectToAdd.subPlan = currPlan
+        myRoot = selectToAdd
     return Plan(root = myRoot)
 
   def findFirstMatch(self, currPlan, predAttributes):
