@@ -1,0 +1,27 @@
+Time stamps
+
+Query1
+
+Opt: 730711 - 728140
+nOp: 58729 - 56185
+
+Query2
+
+Opt:
+nOp:
+
+Query3
+
+Opt:
+nOp:
+
+Query4
+
+Opt:
+nOp:
+
+Query5
+
+Opt:
+nOp:
+
