@@ -168,9 +168,9 @@ class Optimizer:
         else:
           selectToAdd.subPlan = parentPlan.subPlan
           parentPlan.subPlan = selectToAdd
-      else:
-        selectToAdd.subPlan = currPlan
-        myRoot = selectToAdd
+      # else:
+      #   selectToAdd.subPlan = currPlan
+      #   myRoot = selectToAdd
     return Plan(root = myRoot)
 
   def findFirstMatch(self, currPlan, predAttributes):
