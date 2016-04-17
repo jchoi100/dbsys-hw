@@ -332,7 +332,7 @@ class Optimizer:
           self.joinList.append(currNode.rhsPlan)
           self.joinList.append(self.getJoins(Plan(currNode.lhsPlan))
 
-        if (currType == "Project" or currType == "Select" or currType == "TableScan" or currType == "GroupBy"):
+        elif currType is "Project" or currType == "Select" or currType == "TableScan" or currType == "GroupBy":
           prevNode = currNode
           if currNode.subPlan is None:
             currNode = None
