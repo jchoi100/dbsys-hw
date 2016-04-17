@@ -327,7 +327,6 @@ class Optimizer:
             currNode = currNode.lhsPlan
 
       elif foundJoin is True:
-
         if "Join" in currType:
           self.joinList.append(currNode.rhsPlan)
           self.joinList.append(self.getJoins(Plan(currNode.lhsPlan))
