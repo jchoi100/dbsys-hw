@@ -110,10 +110,11 @@ class Optimizer:
       parentPlan = None
       currPlan = myRoot
       if currPlan.operatorType() is "GroupBy":
+        parentPlan = currPlan
         currPlan = currPlan.subPlan
 
       isLeftChild = False
-      currPlan = self.findFirstMatch(currPlan, predAttributes)
+      currPlan, backupParent = self.findFirstMatch(currPlan, parentPlan, predAttributes)
       currPAttributes = currPlan.schema().fields
 
       # print("\n")
@@ -157,6 +158,14 @@ class Optimizer:
       # the parentOperator and currOperator.
       selectToAdd = Select(subPlan = currPlan, selectExpr = predicate)
       print(parentPlan)
+
+      if not parentPlan:
+        if backupParent:
+          parentPlan = backupParent
+        else:
+          selectToAdd.subPlan = currPlan
+          myRoot = selectToAdd
+
       if parentPlan:
         if parentPlan.operatorType().endswith("Join") or \
              parentPlan.operatorType() is "Union":
@@ -169,30 +178,28 @@ class Optimizer:
         else:
           selectToAdd.subPlan = parentPlan.subPlan
           parentPlan.subPlan = selectToAdd
-      # else:
-      #   selectToAdd.subPlan = currPlan
-      #   myRoot = selectToAdd
+
     return Plan(root = myRoot)
 
-  def findFirstMatch(self, currPlan, predAttributes):
+  def findFirstMatch(self, currPlan, backupParent, predAttributes):
     currPAttributes = currPlan.schema().fields
     if self.firstIsSubsetOfSecond(predAttributes, currPAttributes):
-      return currPlan
+      return currPlan, backupParent
     else:
       if currPlan.operatorType() is "Select" or \
          currPlan.operatorType() is "GroupBy" or \
          currPlan.operatorType() is "Project":
-        return self.findFirstMatch(currPlan.subPlan, predAttributes)
+        return self.findFirstMatch(currPlan.subPlan, currPlan, predAttributes)
       elif currPlan.operatorType() is "TableScan":
         return None
       elif currPlan.operatorType() is "Union" or \
             currPlan.operatorType().endswith("Join"):
-        leftSearch = self.findFirstMatch(currPlan.lhsPlan, predAttributes)
-        rightSearch = self.findFirstMatch(currPlan.rhsPlan, predAttributes)
+        leftSearch, bup = self.findFirstMatch(currPlan.lhsPlan, currPlan, predAttributes)
+        rightSearch, bup = self.findFirstMatch(currPlan.rhsPlan, currPlan, predAttributes)
         if leftSearch is not None:
-          return leftSearch
+          return leftSearch, bup
         else:
-          return rightSearch
+          return rightSearch, bup
 
   # Traverse the plan tree while picking out the select operators.
   # Save the picked out select operators in self.rawPredicates.
