@@ -92,7 +92,6 @@ class Optimizer:
       myRoot = myRoot.subPlan
 
     myRoot = self.traverseTree(myRoot)
-    # newPlan = Plan(root = myRoot)
 
     for rawPredicate in self.rawPredicates:
       decomposedPreds = ExpressionInfo(rawPredicate).decomposeCNF()
@@ -116,10 +115,6 @@ class Optimizer:
       isLeftChild = False
       currPlan, backupParent = self.findFirstMatch(currPlan, parentPlan, predAttributes)
       currPAttributes = currPlan.schema().fields
-
-      # print("\n")
-      # print(currPlan.schema().fields)
-      # print(predAttributes)
 
       while self.firstIsSubsetOfSecond(predAttributes, currPAttributes):
         if currPlan.operatorType().endswith("Join") or \
@@ -164,8 +159,6 @@ class Optimizer:
         else:
           selectToAdd.subPlan = currPlan
           myRoot = selectToAdd
-
-      print(parentPlan)
 
       if parentPlan:
         if parentPlan.operatorType().endswith("Join") or \

@@ -83,7 +83,7 @@ query5 = db.query().fromTable('region') \
 				   			}).finalize()
 
 print("Un-Optimized Explain: ")
-print(query.explain())
+print(query5.explain())
 # print("Un-Optimized Results: ")
 # qresults = [query5.schema().unpack(tup) \
 #         for page in db.processQuery(query5) \
