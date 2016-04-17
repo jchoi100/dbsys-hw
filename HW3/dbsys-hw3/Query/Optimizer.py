@@ -157,7 +157,6 @@ class Optimizer:
       # Now, we know that the select statement should go between
       # the parentOperator and currOperator.
       selectToAdd = Select(subPlan = currPlan, selectExpr = predicate)
-      print(parentPlan)
 
       if not parentPlan:
         if backupParent:
@@ -165,6 +164,8 @@ class Optimizer:
         else:
           selectToAdd.subPlan = currPlan
           myRoot = selectToAdd
+
+      print(parentPlan)
 
       if parentPlan:
         if parentPlan.operatorType().endswith("Join") or \
