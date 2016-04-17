@@ -262,8 +262,8 @@ class Optimizer:
     # 2) and an evaluation of the best plan in each subset
 
 
-    for i in len(relationsInvolved):
-      joinList.append(Plan(root=relationsInvolved[i]))
+    #for i in len(relationsInvolved):
+      #joinList.append(Plan(root=relationsInvolved[i]))
 
     for i in len(relationsInvolved):
       newList = list()
@@ -306,7 +306,7 @@ class Optimizer:
           elif prevNode.operatorType() is "Union":
             prevNode.lhsPlan = None
 
-        elif currNode.operatorType() is "Project" or "Select" or "TableScan" or "GroupBy"
+        elif currNode.operatorType() is "Project" or "Select" or "TableScan" or "GroupBy":
           prevNode = currNode
           currNode = currNode.subplan
 
