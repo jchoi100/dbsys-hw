@@ -1,5 +1,6 @@
 import itertools
 import pdb
+import copy
 from collections import deque
 from Query.Plan import Plan
 from Query.Operators.Join import Join
@@ -289,7 +290,9 @@ class Optimizer:
   def getJoins(self, plan):
     #Everything up to the first join.
 
-    preJoin = copy.deepcopy(plan)
+    
+    #preJoin = plan
+    preJoin = copy.copy(plan)
     foundJoin = False
 
     currNode = plan.root
@@ -308,20 +311,32 @@ class Optimizer:
 
         elif currNode.operatorType() is "Project" or "Select" or "TableScan" or "GroupBy":
           prevNode = currNode
-          currNode = currNode.subplan
+          if currNode.subPlan is None:
+            currNode = None
+          else:
+            currNode = currNode.subplan
 
         elif currNode.operatorType() is "Union":
           prevNode = currNode
-          currNode = currNode.lhsPlan
+          if currNode.lhsPlan is None:
+            currNode = None
+          else:
+            currNode = currNode.lhsPlan
 
       elif foundJoin is True:
         if currNode.operatorType() is "Project" or "Select" or "TableScan" or "GroupBy":
           prevNode = currNode
-          currNode = currNode.subplan
+          if currNode.subplan is None:
+            currNode = None
+          else:
+            currNode = currNode.subplan
 
         elif currNode.operatorType() is "Union":
           prevNode = currNode
-          currNode = currNode.lhsPlan
+          if currNode.lhsPlan is None:
+            currNode = None
+          else:
+            currNode = currNode.lhsPlan
 
         elif currNode.operatorType() is "Join":
           self.joinList.append(currNode.rhsPlan)

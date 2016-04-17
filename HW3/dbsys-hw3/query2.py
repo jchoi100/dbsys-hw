@@ -41,7 +41,7 @@ Optimization Option
 """
 optimized_query = db.optimizer.pushdownOperators(query2)
 
-joined_query = db.optimizer.pickJoinOrder(query2)
+#joined_query = db.optimizer.pickJoinOrder(query2)
 
 print("Un-Optimized Explain: ")
 print(query2.explain())
@@ -66,4 +66,4 @@ print(optimized_query.explain())
 # print(opt_qresults)
 
 print("\nBroken down joins:")
-print(db.optimizer.joinList)
+#print(db.optimizer.joinList)
