@@ -116,6 +116,10 @@ class Optimizer:
       currPlan = self.findFirstMatch(currPlan, predAttributes)
       currPAttributes = currPlan.schema().fields
 
+      print("\n")
+      print(currPlan.schema().fields)
+      print(predAttributes)
+
       while self.firstIsSubsetOfSecond(predAttributes, currPAttributes):
         if currPlan.operatorType().endswith("Join") or \
            currPlan.operatorType() is "Union":
@@ -167,9 +171,6 @@ class Optimizer:
 
   def findFirstMatch(self, currPlan, predAttributes):
     currPAttributes = currPlan.schema().fields
-    print("\n")
-    print(predAttributes)
-    print(currPAttributes)
     if self.firstIsSubsetOfSecond(predAttributes, currPAttributes):
       return currPlan
     else:
