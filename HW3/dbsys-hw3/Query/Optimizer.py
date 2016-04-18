@@ -186,6 +186,7 @@ class Optimizer:
     Project pushdown.
     """
     self.traverseTreeProject(myRoot)
+    print(self.projPredicates)
 
     return Plan(root = myRoot)
 
