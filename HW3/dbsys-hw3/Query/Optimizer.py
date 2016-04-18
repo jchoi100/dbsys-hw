@@ -257,8 +257,9 @@ class Optimizer:
       currRawJoinExpr = curr.JoinExpr
       currJoinExprs = ExpressionInfo(currRawJoinExpr).decomposeCNF()
       print("===================================")
-      print("currJoinExprs:")
-      print(currJoinExprs)
+      print("join fields:")
+      allFields = ExpressionInfo(currRawJoinExpr).getAttributes()
+      print(allFields)      
       for currJoinExpr in currJoinExprs:
         splitExprs = currJoinExpr.split("==")
         for splitExpr in splitExprs:
@@ -277,11 +278,12 @@ class Optimizer:
       print("===================================")
       print("rawProjPreds:")
       rawProjPreds = curr.projectExprs
-      print(rawProjPreds)
+      allFields = ExpressionInfo(rawProjPreds).getAttributes()
+      print(allFields)
       self.traverseTreeProject(curr.subPlan)
     elif curr.operatorType() is "Select":
       rawSelectPreds = curr.selectExpr
-      selExprs = ExpressionInfo(rawSelectPreds).decomposeCNF()
+      selExprs = ExpressionInfo(rawSelectPreds).getAttributes()
       print("===================================")
       print("selExprs:")
       print(selExprs)
