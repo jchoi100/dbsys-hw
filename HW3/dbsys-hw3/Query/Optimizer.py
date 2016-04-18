@@ -51,6 +51,8 @@ class Optimizer:
     self.statsCache = {}
     self.rawPredicates = [] # list of CNF-formatted selectExprs
     self.predicates = [] # list of CNF-decomposed selectExprs
+    self.rawProjPredicates = [] # list of comma-formatted projectExprs
+    self.projPredicates = [] # list of comma-separated projectExprs
 
     self.joinList = list() #Tables (possibly with non-join operations) that are joined in the initial query
 
@@ -90,11 +92,15 @@ class Optimizer:
     relationsInvolved = plan.relations()
     myRoot = plan.root
 
+    """
+    Select pushdown.
+    """
+
     while myRoot.operatorType() is "Select":
       self.rawPredicates.append(myRoot.selectExpr)
       myRoot = myRoot.subPlan
 
-    myRoot = self.traverseTree(myRoot)
+    myRoot = self.traverseTreeSelect(myRoot)
 
     for rawPredicate in self.rawPredicates:
       decomposedPreds = ExpressionInfo(rawPredicate).decomposeCNF()
@@ -176,6 +182,11 @@ class Optimizer:
           selectToAdd.subPlan = parentPlan.subPlan
           parentPlan.subPlan = selectToAdd
 
+    """
+    Project pushdown.
+    """
+    self.traverseTreeProject(myRoot)
+
     return Plan(root = myRoot)
 
   def findFirstMatch(self, currPlan, backupParent, predAttributes):
@@ -204,7 +215,7 @@ class Optimizer:
   # recursion, save the result from the previous recursive call
   # to curr's subPlan (or lhsPlan or rhsPlan depending on optype).
   # @param curr: currNode
-  def traverseTree(self, curr):
+  def traverseTreeSelect(self, curr):
     if curr.operatorType().endswith("Join") or \
       curr.operatorType() is "Union":
       leftChild = curr.lhsPlan
@@ -217,18 +228,18 @@ class Optimizer:
         self.rawPredicates.append(rightChild.selectExpr)
         curr.rhsPlan = rightChild.subPlan
         rightChild = curr.rhsPlan
-      curr.lhsPlan = self.traverseTree(leftChild)
-      curr.rhsPlan = self.traverseTree(rightChild)
+      curr.lhsPlan = self.traverseTreeSelect(leftChild)
+      curr.rhsPlan = self.traverseTreeSelect(rightChild)
     elif curr.operatorType() is "Project":
       childPlan = curr.subPlan
       while childPlan.operatorType() is "Select":
         self.rawPredicates.append(childPlan.selectExpr)
         curr.subPlan = childPlan.subPlan
         childPlan = curr.subPlan
-      curr.subPlan = self.traverseTree(childPlan)
+      curr.subPlan = self.traverseTreeSelect(childPlan)
     elif curr.operatorType() is "Select":
       self.rawPredicates.append(curr.selectExpr)
-      curr.subPlan = self.traverseTree(curr.subPlan)
+      curr.subPlan = self.traverseTreeSelect(curr.subPlan)
     elif curr.operatorType() is "TableScan":
       return curr
     else:
@@ -237,8 +248,72 @@ class Optimizer:
         self.rawPredicates.append(childPlan.selectExpr)
         curr.subPlan = childPlan.subPlan
         childPlan = curr.subPlan
-      curr.subPlan = self.traverseTree(childPlan)
+      curr.subPlan = self.traverseTreeSelect(childPlan)
     return curr
+
+  def traverseTreeProject(self, curr):
+    if curr.operatorType().endswith("Join"):
+      currRawJoinExpr = curr.JoinExpr
+      currJoinExprs = ExpressionInfo(currRawJoinExpr).decomposeCNF()
+      for currJoinExpr in currJoinExprs:
+        splitExprs = currJoinExpr.split("==")
+        for splitExpr in splitExprs:
+          self.projPredicates.append(splitExpr)
+      self.traverseTreeProject(curr.lhsPlan)
+      self.traverseTreeProject(curr.rhsPlan)
+    elif curr.operatorType() is "GroupBy":
+      gbSchemaFields = curr.groupSchema.fields
+      for field in gbSchemaFields:
+        self.projPredicates.append(field)
+      self.traverseTreeProject(curr.subPlan)
+    elif curr.operatorType() is "Project":
+      rawProjPreds = curr.projectExprs
+      print(rawProjPreds)
+    elif curr.operatorType() is "Select":
+      rawSelectPreds = curr.selectExpr
+      selExprs = ExpressionInfo(rawSelectPreds).decomposeCNF()
+      for selExpr in selExprs:
+        self.projPredicates.append(selExpr)
+      self.traverseTreeProject(curr.subPlan)
+    elif curr.operatorType() is "Union":
+      fields = curr.schema().fields
+      for field in fields:
+        self.projPredicates.append(field)
+      self.traverseTreeProject(curr.subPlan)
+    else:
+      return
+
+  # def traverseTreeProject(self, curr):
+  #   if curr.operatorType().endswith("Join") or \
+  #     curr.operatorType() is "Union":
+  #     leftChild = curr.lhsPlan
+  #     rightChild = curr.rhsPlan
+  #     while leftChild.operatorType() is "Project":
+  #       self.rawProjPredicates.append(leftChild.projectExprs)
+  #       leftChild = leftChild.subPlan
+  #     while rightChild.operatorType() is "Project":
+  #       self.rawProjPredicates.append(rightChild.projectExprs)
+  #       rightChild = rightChild.subPlan
+  #     curr.lhsPlan = self.traverseTreeProject(leftChild)
+  #     curr.rhsPlan = self.traverseTreeProject(rightChild)
+  #   elif curr.operatorType() is "Select":
+  #     childPlan = curr.subPlan
+  #     while childPlan.operatorType() is "Project":
+  #       self.rawProjPredicates.append(childPlan.projectExprs)
+  #       childPlan = childPlan.subPlan
+  #     curr.subPlan = self.traverseTreeProject(childPlan)
+  #   elif curr.operatorType() is "Project":
+  #     self.rawProjPredicates.append(curr.projectExprs)
+  #     curr.subPlan = self.traverseTreeProject(curr.subPlan)
+  #   elif curr.operatorType() is "TableScan":
+  #     return curr
+  #   else:
+  #     childPlan = curr.subPlan
+  #     while childPlan.operatorType() is "Project":
+  #       self.rawProjPredicates.append(childPlan.projectExprs)
+  #       childPlan = childPlan.subPlan
+  #     curr.subPlan = self.traverseTreeProject(childPlan)
+  #   return curr
 
   # Check if "firstSet" is a subset of "secondSet".
   # Both input "set"s are python lists.
