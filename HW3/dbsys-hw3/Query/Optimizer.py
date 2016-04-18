@@ -341,103 +341,103 @@ class Optimizer:
         return False
     return True
 
-  # # Returns an optimized query plan with joins ordered via a System-R style
-  # # dyanmic programming algorithm. The plan cost should be compared with the
-  # # use of the cost model below.
-  # def pickJoinOrder(self, plan):
-  #   plan.prepare(self.db)
+  # Returns an optimized query plan with joins ordered via a System-R style
+  # dyanmic programming algorithm. The plan cost should be compared with the
+  # use of the cost model below.
+  def pickJoinOrder(self, plan):
+    plan.prepare(self.db)
 
-  #   preJoin = self.getJoins(plan)
-
-
-  #   # For each pass, do:
-  #   # 1) an enumeration of viable candidate plans for the given subsets of relations
-  #   # 2) and an evaluation of the best plan in each subset
+    preJoin = self.getJoins(plan)
 
 
-  #   #for i in len(relationsInvolved):
-  #     #joinList.append(Plan(root=relationsInvolved[i]))
-
-  #   for i in len(relationsInvolved):
-  #     newList = list()
-  #     for j in joinList:
-  #       for k in relationsInvolved:
-  #         if k in j.relations():
-  #           #Test the different join orderings
-  #           oldFirst =  True
-  #           joinType = "block-nested-loops"
-  #           minCost = 2147483647
-
-  #           #Test the 2 orders and 2 kinds of join's costs. Return with the minimum
-  #           tempPlan = Plan()
-
-  #           cost = self.getPlanCost(tempPlan)
-
-  #           newList.append(tempPlan)
-
-  #     joinList = newList
-
-  #   return Plan(root = newList[0])
-
-  # def getJoins(self, plan):
-  #   #Everything up to the first join.
+    # For each pass, do:
+    # 1) an enumeration of viable candidate plans for the given subsets of relations
+    # 2) and an evaluation of the best plan in each subset
 
 
-  #   #preJoin = plan
-  #   preJoin = copy.copy(plan)
-  #   foundJoin = False
+    #for i in len(relationsInvolved):
+      #joinList.append(Plan(root=relationsInvolved[i]))
 
-  #   currNode = plan.root
-  #   prevNode = plan.root
+    for i in len(relationsInvolved):
+      newList = list()
+      for j in joinList:
+        for k in relationsInvolved:
+          if k in j.relations():
+            #Test the different join orderings
+            oldFirst =  True
+            joinType = "block-nested-loops"
+            minCost = 2147483647
 
-  #   while currNode is not None:
-  #     currType = currNode.operatorType()
-  #     prevType = prevNode.operatorType()
+            #Test the 2 orders and 2 kinds of join's costs. Return with the minimum
+            tempPlan = Plan()
 
-  #     if foundJoin is False:
-  #       if "Join" in currType:
-  #         foundJoin = True
+            cost = self.getPlanCost(tempPlan)
 
-  #         if prevType is "Project" or prevType is "Select" or prevType is "TableScan" or prevType is "GroupBy":
-  #           prevNode.subPlan = None
+            newList.append(tempPlan)
 
-  #         elif prevType is "Union":
-  #           prevNode.lhsPlan = None
+      joinList = newList
 
-  #       elif currType is "Project" or currType is "Select" or currType is "TableScan" or currType is "GroupBy":
-  #         prevNode = currNode
-  #         if currNode.subPlan is None:
-  #           currNode = None
-  #         else:
-  #           currNode = currNode.subPlan
+    return Plan(root = newList[0])
 
-  #       elif currType is "Union":
-  #         prevNode = currNodee
-  #         if currNode.lhsPlan is None:
-  #           currNode = None
-  #         else:
-  #           currNode = currNode.lhsPlan
+  def getJoins(self, plan):
+    #Everything up to the first join.
 
-  #     elif foundJoin is True:
-  #       if "Join" in currType:
-  #         self.joinList.append(currNode.rhsPlan)
-  #         self.joinList.append(self.getJoins(Plan(currNode.lhsPlan))
 
-  #       elif currType is "Project" or currType == "Select" or currType == "TableScan" or currType == "GroupBy":
-  #         prevNode = currNode
-  #         if currNode.subPlan is None:
-  #           currNode = None
-  #         else:
-  #           currNode = currNode.subPlan
+    #preJoin = plan
+    preJoin = copy.copy(plan)
+    foundJoin = False
 
-  #       elif currType is "Union":
-  #         prevNode = currNode
-  #         if currNode.lhsPlan is None:
-  #           currNode = None
-  #         else:
-  #           currNode = currNode.lhsPlan
+    currNode = plan.root
+    prevNode = plan.root
 
-  #   return preJoin
+    while currNode is not None:
+      currType = currNode.operatorType()
+      prevType = prevNode.operatorType()
+
+      if foundJoin is False:
+        if "Join" in currType:
+          foundJoin = True
+
+          if prevType is "Project" or prevType is "Select" or prevType is "TableScan" or prevType is "GroupBy":
+            prevNode.subPlan = None
+
+          elif prevType is "Union":
+            prevNode.lhsPlan = None
+
+        elif currType is "Project" or currType is "Select" or currType is "TableScan" or currType is "GroupBy":
+          prevNode = currNode
+          if currNode.subPlan is None:
+            currNode = None
+          else:
+            currNode = currNode.subPlan
+
+        elif currType is "Union":
+          prevNode = currNode
+          if currNode.lhsPlan is None:
+            currNode = None
+          else:
+            currNode = currNode.lhsPlan
+
+      elif foundJoin is True:
+        if "Join" in currType:
+          self.joinList.append(currNode.rhsPlan)
+          self.joinList.append(self.getJoins(Plan(currNode.lhsPlan)))
+
+        elif currType is "Project" or currType == "Select" or currType == "TableScan" or currType == "GroupBy":
+          prevNode = currNode
+          if currNode.subPlan is None:
+            currNode = None
+          else:
+            currNode = currNode.subPlan
+
+        elif currType is "Union":
+          prevNode = currNode
+          if currNode.lhsPlan is None:
+            currNode = None
+          else:
+            currNode = currNode.lhsPlan
+
+    return preJoin
 
   def swapJoinSubPlans(self, join):
     temp = join.lhsPlan
