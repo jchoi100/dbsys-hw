@@ -40,7 +40,7 @@ query2 = db.query().fromTable('lineitem')\
 """
 Un-Optimized Version
 """
-optimized_query = db.optimizer.pushdownOperators(query2)
+#optimized_query = db.optimizer.pushdownOperators(query2)
 
 #joined_query = db.optimizer.pickJoinOrder(query2)
 
@@ -55,10 +55,10 @@ print(query2.explain())
 """
 Pushdown Option
 """
-optimized_query = db.optimizer.pushdownOperators(query2)
-print("\n")
-print("Optimized Explain: ")
-print(optimized_query.explain())
+#optimized_query = db.optimizer.pushdownOperators(query2)
+#print("\n")
+#print("Optimized Explain: ")
+#print(optimized_query.explain())
 # print("Optimized Results: ")
 # opt_qresults = [optimized_query.schema().unpack(tup) \
 #         for page in db.processQuery(optimized_query) \
@@ -70,4 +70,6 @@ JoinOrder Option
 """
 joined_query = db.optimizer.pickJoinOrder(query2)
 print("\nBroken down joins:")
+for i in db.optimizer.joinList:
+  print(i.operatorType())
 #print(db.optimizer.joinList)

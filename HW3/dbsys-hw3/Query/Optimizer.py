@@ -341,8 +341,8 @@ class Optimizer:
 
     #for i in len(relationsInvolved):
       #joinList.append(Plan(root=relationsInvolved[i]))
-
-    for i in len(relationsInvolved):
+    relationsInvolved = list()
+    for i in relationsInvolved:
       newList = list()
       for j in joinList:
         for k in relationsInvolved:
@@ -360,15 +360,15 @@ class Optimizer:
             newList.append(tempPlan)
 
       joinList = newList
-
-    return Plan(root = newList[0])
+    return None
+#    return Plan(root = newList[0])
 
   def getJoins(self, plan):
     #Everything up to the first join.
 
 
-    #preJoin = plan
-    preJoin = copy.copy(plan)
+    preJoin = plan
+    #preJoin = copy.copy(plan)
     foundJoin = False
 
     currNode = plan.root
@@ -378,6 +378,7 @@ class Optimizer:
       currType = currNode.operatorType()
       prevType = prevNode.operatorType()
 
+      print(currType)
       if foundJoin is False:
         if "Join" in currType:
           foundJoin = True
@@ -388,7 +389,7 @@ class Optimizer:
           elif prevType is "Union":
             prevNode.lhsPlan = None
 
-        elif currType is "Project" or currType is "Select" or currType is "TableScan" or currType is "GroupBy":
+        elif currType is "Project" or currType is "Select" or currType is "GroupBy":
           prevNode = currNode
           if currNode.subPlan is None:
             currNode = None
@@ -401,13 +402,21 @@ class Optimizer:
             currNode = None
           else:
             currNode = currNode.lhsPlan
+
+        elif currType is "TableScan":
+          return preJoin
+
 
       elif foundJoin is True:
         if "Join" in currType:
           self.joinList.append(currNode.rhsPlan)
-          self.joinList.append(self.getJoins(Plan(currNode.lhsPlan)))
-
-        elif currType is "Project" or currType == "Select" or currType == "TableScan" or currType == "GroupBy":
+          #self.joinList.append(currNode.lhsPlan)
+          print("Appended... " +  currNode.rhsPlan.operatorType())
+          print("Put back recursively... " + currNode.lhsPlan.operatorType())
+          self.joinList.append(self.getJoins(Plan(root=currNode.lhsPlan)).root)
+          print("Recursively appended... " + self.joinList[-1].operatorType())
+          currNode = currNode.lhsPlan
+        elif currType is "Project" or currType == "Select" or currType == "GroupBy":
           prevNode = currNode
           if currNode.subPlan is None:
             currNode = None
@@ -420,6 +429,9 @@ class Optimizer:
             currNode = None
           else:
             currNode = currNode.lhsPlan
+
+        elif currType is "TableScan":
+          return preJoin
 
     return preJoin
 
