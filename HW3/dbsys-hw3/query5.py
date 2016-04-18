@@ -69,8 +69,7 @@ query5 = db.query().fromTable('region') \
 					  lhsKeySchema = rRegionKeySchema, \
 					  rhsKeySchema = nRegionKeySchema, \
 					  expr = 'N_REGIONKEY == R_REGIONKEY') \
-				   .where('R_NAME = \'ASIA\' and \
-				   	       O_ORDERDATE >= 19940101 and \
+				   .where('O_ORDERDATE >= 19940101 and \
 				   	       O_ORDERDATE < 19950101') \
 				   .groupBy( \
 				   	  groupSchema = keySchema, \
