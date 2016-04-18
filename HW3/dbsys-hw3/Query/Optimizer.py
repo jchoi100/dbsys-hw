@@ -256,6 +256,9 @@ class Optimizer:
     if curr.operatorType().endswith("Join"):
       currRawJoinExpr = curr.JoinExpr
       currJoinExprs = ExpressionInfo(currRawJoinExpr).decomposeCNF()
+      print("===================================")
+      print("currJoinExprs:")
+      print(currJoinExprs)
       for currJoinExpr in currJoinExprs:
         splitExprs = currJoinExpr.split("==")
         for splitExpr in splitExprs:
@@ -264,24 +267,36 @@ class Optimizer:
       self.traverseTreeProject(curr.rhsPlan)
     elif curr.operatorType() is "GroupBy":
       gbSchemaFields = curr.groupSchema.fields
+      print("===================================")
+      print("gbSchemaFields:")
+      print(gbSchemaFields)
       for field in gbSchemaFields:
         self.projPredicates.append(field)
       self.traverseTreeProject(curr.subPlan)
     elif curr.operatorType() is "Project":
+      print("===================================")
+      print("rawProjPreds:")
       rawProjPreds = curr.projectExprs
       print(rawProjPreds)
     elif curr.operatorType() is "Select":
       rawSelectPreds = curr.selectExpr
       selExprs = ExpressionInfo(rawSelectPreds).decomposeCNF()
+      print("===================================")
+      print("selExprs:")
+      print(selExprs)
       for selExpr in selExprs:
         self.projPredicates.append(selExpr)
       self.traverseTreeProject(curr.subPlan)
     elif curr.operatorType() is "Union":
       fields = curr.schema().fields
+      print("===================================")
+      print("union fields:")
+      print(fields)
       for field in fields:
         self.projPredicates.append(field)
       self.traverseTreeProject(curr.subPlan)
     else:
+      print("Out!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
       return
 
   # def traverseTreeProject(self, curr):
