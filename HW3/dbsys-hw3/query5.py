@@ -95,13 +95,6 @@ Pushdown Option
 """
 optimized_query = db.optimizer.pushdownOperators(query5)
 
-
-"""
-Join Order Option
-"""
-# join_optimized_query = db.optimizer.pickJoinOrder(query5)
-
-
 print("\n")
 print("Optimized Explain: ")
 print(optimized_query.explain())
@@ -111,3 +104,7 @@ print(optimized_query.explain())
 #         for tup in page[1]]
 # print(opt_qresults)
 
+"""
+Join Order Option
+"""
+# join_optimized_query = db.optimizer.pickJoinOrder(query5)
