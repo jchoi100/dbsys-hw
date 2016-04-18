@@ -278,6 +278,7 @@ class Optimizer:
       print("rawProjPreds:")
       rawProjPreds = curr.projectExprs
       print(rawProjPreds)
+      self.traverseTreeProject(curr.subPlan)
     elif curr.operatorType() is "Select":
       rawSelectPreds = curr.selectExpr
       selExprs = ExpressionInfo(rawSelectPreds).decomposeCNF()
