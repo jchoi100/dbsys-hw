@@ -1,5 +1,6 @@
 import itertools
 import pdb
+import copy
 from collections import deque
 from Query.Plan import Plan
 from Query.Operators.Join import Join
@@ -50,6 +51,8 @@ class Optimizer:
     self.statsCache = {}
     self.rawPredicates = [] # list of CNF-formatted selectExprs
     self.predicates = [] # list of CNF-decomposed selectExprs
+
+    self.joinList = list() #Tables (possibly with non-join operations) that are joined in the initial query
 
   # Caches the cost of a plan computed during query optimization.
   def addPlanCost(self, plan, cost):
@@ -251,20 +254,17 @@ class Optimizer:
   # use of the cost model below.
   def pickJoinOrder(self, plan):
     plan.prepare(self.db)
-    relationsInvolved = plan.relations()
-    myRoot = plan.root
+
+    preJoin = self.getJoins(plan)
+
 
     # For each pass, do:
     # 1) an enumeration of viable candidate plans for the given subsets of relations
     # 2) and an evaluation of the best plan in each subset
 
 
-    # Maybe need to filter to the relations involved in the joins?
-
-    joinList = list()
-
-    for i in len(relationsInvolved):
-      joinList.append(Plan(relationsInvolved[i]))
+    #for i in len(relationsInvolved):
+      #joinList.append(Plan(root=relationsInvolved[i]))
 
     for i in len(relationsInvolved):
       newList = list()
@@ -286,6 +286,76 @@ class Optimizer:
       joinList = newList
 
     return Plan(root = newList[0])
+
+  def getJoins(self, plan):
+    #Everything up to the first join.
+
+
+    #preJoin = plan
+    preJoin = copy.copy(plan)
+    foundJoin = False
+
+    currNode = plan.root
+    prevNode = plan.root
+
+    while currNode is not None:
+      currType = currNode.operatorType()
+      prevType = prevNode.operatorType()
+
+      if foundJoin is False:
+        if "Join" in currType:
+          foundJoin = True
+
+          if prevType is "Project" or prevType is "Select" or prevType is "TableScan" or prevType is "GroupBy":
+            prevNode.subPlan = None
+
+          elif prevType is "Union":
+            prevNode.lhsPlan = None
+
+        elif currType is "Project" or currType is "Select" or currType is "TableScan" or currType is "GroupBy":
+          prevNode = currNode
+          if currNode.subPlan is None:
+            currNode = None
+          else:
+            currNode = currNode.subPlan
+
+        elif currType is "Union":
+          prevNode = currNodee
+          if currNode.lhsPlan is None:
+            currNode = None
+          else:
+            currNode = currNode.lhsPlan
+
+      elif foundJoin is True:
+        if "Join" in currType:
+          self.joinList.append(currNode.rhsPlan)
+          self.joinList.append(self.getJoins(Plan(currNode.lhsPlan))
+
+        elif currType is "Project" or currType == "Select" or currType == "TableScan" or currType == "GroupBy":
+          prevNode = currNode
+          if currNode.subPlan is None:
+            currNode = None
+          else:
+            currNode = currNode.subPlan
+
+        elif currType is "Union":
+          prevNode = currNode
+          if currNode.lhsPlan is None:
+            currNode = None
+          else:
+            currNode = currNode.lhsPlan
+
+    return preJoin
+
+  def swapJoinSubPlans(self, join):
+    temp = join.lhsPlan
+    join.lhsPlan = join.rhsPlan
+    join.rhsPlan = temp
+    join.lhsSchema = join.lhsPlan.schema()
+    join.rhsSchema = join.rhsPlan.schema()
+    join.initializeSchema()
+    return join
+
 
   # Optimize the given query plan, returning the resulting improved plan.
   # This should perform operation pushdown, followed by join order selection.

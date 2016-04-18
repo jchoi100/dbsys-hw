@@ -36,6 +36,14 @@ query2 = db.query().fromTable('lineitem')\
 				   	  groupHashFn = (lambda gbVal: 0)) \
 				   .select({'promo_revenue': ('promo_revenue', 'double')}).finalize()
 
+
+"""
+Un-Optimized Version
+"""
+optimized_query = db.optimizer.pushdownOperators(query2)
+
+#joined_query = db.optimizer.pickJoinOrder(query2)
+
 print("Un-Optimized Explain: ")
 print(query2.explain())
 # print("Un-Optimized Results: ")
@@ -48,7 +56,6 @@ print(query2.explain())
 Pushdown Option
 """
 optimized_query = db.optimizer.pushdownOperators(query2)
-
 print("\n")
 print("Optimized Explain: ")
 print(optimized_query.explain())
@@ -57,3 +64,10 @@ print(optimized_query.explain())
 #         for page in db.processQuery(optimized_query) \
 #         for tup in page[1]]
 # print(opt_qresults)
+
+"""
+JoinOrder Option
+"""
+joined_query = db.optimizer.pickJoinOrder(query2)
+print("\nBroken down joins:")
+#print(db.optimizer.joinList)
