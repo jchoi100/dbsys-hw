@@ -185,11 +185,39 @@ class Optimizer:
     """
     Project pushdown.
     """
-    self.traverseTreeProject(myRoot)
-    print(self.projPredicates)
+    # First traverse down the tree and keep a list of all the attributes that
+    # ever get used by any operator.
+    # self.traverseTreeProject(myRoot)
+    # For each field in the list created above, create a dictionary to sort
+    # the fields by their base tables.
+    # For each value (list of attributes) corresponding to a key (table name) in 
+    # the dictionary, create a Project operator on those attributes.
+    # Attach this operator right above the appropriate base table in the Plan.
+    # for field in self.projPredicates:
+    #   res, tableParent = self.findTableParent(myRoot, None, field)
+    #   newProject = Project(subPlan = res, projectExprs = {field: (field, )})
 
     return Plan(root = myRoot)
 
+  # Helper method for Project pushdown.
+  def findTableParent(self, currPlan, backupParent, field):
+    if currPlan.operatorType() is "TableScan" and field in currPlan.schema().fields:
+      return currPlan, backupParent
+    else:
+      if currPlan.operatorType() is "Select" or \
+         currPlan.operatorType() is "GroupBy" or \
+         currPlan.operatorType() is "Project":
+        return self.findTableParent(currPlan.subPlan, currPlan, field)
+      elif currPlan.operatorType() is "Union" or \
+            currPlan.operatorType().endswith("Join"):
+        leftSearch, bup = self.findTableParent(currPlan.lhsPlan, currPlan, field)
+        rightSearch, bup = self.findTableParent(currPlan.rhsPlan, currPlan, field)
+        if leftSearch is not None:
+          return leftSearch, bup
+        else:
+          return rightSearch, bup
+
+  # Helper method for Select pushdown.
   def findFirstMatch(self, currPlan, backupParent, predAttributes):
     currPAttributes = currPlan.schema().fields
     if self.firstIsSubsetOfSecond(predAttributes, currPAttributes):
@@ -210,6 +238,7 @@ class Optimizer:
         else:
           return rightSearch, bup
 
+  # Helper method for Select pushdown.
   # Traverse the plan tree while picking out the select operators.
   # Save the picked out select operators in self.rawPredicates.
   # Recursively traverse the tree. Upon returning from the previous
@@ -252,6 +281,7 @@ class Optimizer:
       curr.subPlan = self.traverseTreeSelect(childPlan)
     return curr
 
+  # Helper method for Project pushdown.
   def traverseTreeProject(self, curr):
     if curr.operatorType().endswith("Join"):
       currRawJoinExpr = curr.joinExpr
@@ -283,38 +313,6 @@ class Optimizer:
       self.traverseTreeProject(curr.subPlan)
     else:
       return
-
-  # def traverseTreeProject(self, curr):
-  #   if curr.operatorType().endswith("Join") or \
-  #     curr.operatorType() is "Union":
-  #     leftChild = curr.lhsPlan
-  #     rightChild = curr.rhsPlan
-  #     while leftChild.operatorType() is "Project":
-  #       self.rawProjPredicates.append(leftChild.projectExprs)
-  #       leftChild = leftChild.subPlan
-  #     while rightChild.operatorType() is "Project":
-  #       self.rawProjPredicates.append(rightChild.projectExprs)
-  #       rightChild = rightChild.subPlan
-  #     curr.lhsPlan = self.traverseTreeProject(leftChild)
-  #     curr.rhsPlan = self.traverseTreeProject(rightChild)
-  #   elif curr.operatorType() is "Select":
-  #     childPlan = curr.subPlan
-  #     while childPlan.operatorType() is "Project":
-  #       self.rawProjPredicates.append(childPlan.projectExprs)
-  #       childPlan = childPlan.subPlan
-  #     curr.subPlan = self.traverseTreeProject(childPlan)
-  #   elif curr.operatorType() is "Project":
-  #     self.rawProjPredicates.append(curr.projectExprs)
-  #     curr.subPlan = self.traverseTreeProject(curr.subPlan)
-  #   elif curr.operatorType() is "TableScan":
-  #     return curr
-  #   else:
-  #     childPlan = curr.subPlan
-  #     while childPlan.operatorType() is "Project":
-  #       self.rawProjPredicates.append(childPlan.projectExprs)
-  #       childPlan = childPlan.subPlan
-  #     curr.subPlan = self.traverseTreeProject(childPlan)
-  #   return curr
 
   # Check if "firstSet" is a subset of "secondSet".
   # Both input "set"s are python lists.
