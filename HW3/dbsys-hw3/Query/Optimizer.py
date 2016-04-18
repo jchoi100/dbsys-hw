@@ -278,8 +278,8 @@ class Optimizer:
       print("===================================")
       print("rawProjPreds:")
       rawProjPreds = curr.projectExprs
-      allFields = ExpressionInfo(rawProjPreds).getAttributes()
-      print(allFields)
+      # allFields = ExpressionInfo(rawProjPreds).getAttributes()
+      # print(allFields)
       self.traverseTreeProject(curr.subPlan)
     elif curr.operatorType() is "Select":
       rawSelectPreds = curr.selectExpr
