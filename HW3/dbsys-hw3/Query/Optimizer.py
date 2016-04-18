@@ -254,12 +254,9 @@ class Optimizer:
 
   def traverseTreeProject(self, curr):
     if curr.operatorType().endswith("Join"):
-      currRawJoinExpr = curr.JoinExpr
+      currRawJoinExpr = curr.joinExpr
       currJoinExprs = ExpressionInfo(currRawJoinExpr).decomposeCNF()
-      print("===================================")
-      print("join fields:")
       allFields = ExpressionInfo(currRawJoinExpr).getAttributes()
-      print(allFields)      
       for currJoinExpr in currJoinExprs:
         splitExprs = currJoinExpr.split("==")
         for splitExpr in splitExprs:
@@ -268,38 +265,23 @@ class Optimizer:
       self.traverseTreeProject(curr.rhsPlan)
     elif curr.operatorType() is "GroupBy":
       gbSchemaFields = curr.groupSchema.fields
-      print("===================================")
-      print("gbSchemaFields:")
-      print(gbSchemaFields)
       for field in gbSchemaFields:
         self.projPredicates.append(field)
       self.traverseTreeProject(curr.subPlan)
     elif curr.operatorType() is "Project":
-      print("===================================")
-      print("rawProjPreds:")
-      rawProjPreds = curr.projectExprs
-      # allFields = ExpressionInfo(rawProjPreds).getAttributes()
-      # print(allFields)
       self.traverseTreeProject(curr.subPlan)
     elif curr.operatorType() is "Select":
       rawSelectPreds = curr.selectExpr
       selExprs = ExpressionInfo(rawSelectPreds).getAttributes()
-      print("===================================")
-      print("selExprs:")
-      print(selExprs)
       for selExpr in selExprs:
         self.projPredicates.append(selExpr)
       self.traverseTreeProject(curr.subPlan)
     elif curr.operatorType() is "Union":
       fields = curr.schema().fields
-      print("===================================")
-      print("union fields:")
-      print(fields)
       for field in fields:
         self.projPredicates.append(field)
       self.traverseTreeProject(curr.subPlan)
     else:
-      print("Out!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
       return
 
   # def traverseTreeProject(self, curr):
