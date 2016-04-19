@@ -72,4 +72,4 @@ joined_query = db.optimizer.pickJoinOrder(query2)
 print("\nBroken down joins:")
 for i in db.optimizer.joinList:
   print(i.explain())
-#print(db.optimizer.joinList)
+print("Explain:\n" + joined_query.explain())

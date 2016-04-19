@@ -55,7 +55,7 @@ class Optimizer:
     self.projPredicates = [] # list of comma-separated projectExprs
 
     self.joinList = list() #Tablescans (possibly with other non-join operations) that are joined in the initial query
-    self.joinExprList = dict() Expressions in the joins
+    self.joinExprList = dict() #Expressions in the joins
 
   # Caches the cost of a plan computed during query optimization.
   def addPlanCost(self, plan, cost):
@@ -335,25 +335,27 @@ class Optimizer:
     preJoin = self.getJoins(plan)
     ret = Plan(root=preJoin.root)
 
-    optimalList = list()
 
-    for i in joinList:
+    optimalList = list()
+    print("Contents of joinList:\n")
+    for i in self.joinList:
+      print(i.explain())
       optimalList.append(Plan(root=i))
 
-      # For each pass, do:
-      # 1) an enumeration of viable candidate plans for the given subsets of relations
-      # 2) and an evaluation of the best plan in each subset
+    for i in self.joinExprList:
+      print(i)
 
     # TODO make sure what the upperbound for the outermost for loop is
-    for x in range(1, len(joinList) + 1):
+    for x in range(1, len(self.joinList) + 1):
       tempList = list()
       for o in optimalList:
-        for i in joinList:
-          if not insidePlan(i, o): #TODO necessary?
-            if joinExprList.has_key(o.root, i):
-
-              tempJoin = Join(lhsPlan=o, rhsPlan=i, lhsSchema = o.schema(), \
-              rhsSchema = i.schema(), joinMethod="block-nested-loops", joinExpr=joinExprList.get(frozenset(o.root, i)))
+        for i in self.joinList:
+          if not self.insidePlan(i, o): #TODO necessary?
+            tempKey = frozenset([o.root, i])
+            if tempKey in self.joinExprList:
+              print("Confirmed ( " + o.root.explain() + ", " + i.explain() + "\n in joinList" + self.joinExprList[tempKey])
+              tempJoin = Join(o.root,i, lhsSchema=o.schema(), \
+              rhsSchema=i.schema(), method="block-nested-loops", expr=self.joinExprList[tempKey])
 
               # o first, BNL
               tempPlan = Plan(root=tempJoin)
@@ -362,7 +364,7 @@ class Optimizer:
               minCost = tempPlan.cost(False)
 
               # i first, BNL
-              tempPlan = swapPlan(tempPlan, False)
+              tempPlan = self.swapPlan(tempPlan, False)
               tempPlan.prepare(self.db)
               cost = tempPlan.cost(False)
               if(cost < minCost):
@@ -370,7 +372,7 @@ class Optimizer:
                 bestPlan = tempPlan
 
               # i first, NL
-              tempPlan = swapPlan(tempPlan, True)
+              tempPlan = self.swapPlan(tempPlan, True)
               tempPlan.prepare(self.db)
               cost = tempPlan.cost(False)
               if(cost < minCost):
@@ -378,7 +380,7 @@ class Optimizer:
                 bestPlan = tempPlan
 
               # o first, NL
-              tempPlan = swapPlan(tempPlan, False)
+              tempPlan = self.swapPlan(tempPlan, False)
               tempPlan.prepare(self.db)
               cost = tempPlan.cost(False)
               if(cost < minCost):
@@ -393,9 +395,15 @@ class Optimizer:
       while currNode is not None:
         currType = currNode.operatorType()
         if currType is "Project" or currType is "Select" or currType is "GroupBy":
-          currNode = currNode.subplan
+          if currNode.subPlan is not None:
+            currNode = currNode.subPlan
+          else:
+            currNode = None
         elif currType is "Union" or "Join":
-          currNode = currNode.lhsPlan
+          if currNode.lhsPlan is not None: #is this lhs/rhs?
+            currNode = currNode.lhsPlan
+          else:
+            currNode = None
 
     currNode = optimalList[0].root
     return preJoin
@@ -404,18 +412,18 @@ class Optimizer:
   def swapPlan(self, plan, method):
     changedPlan = plan
     if method:
-      if changedPlan.joinMethod is "block-nested-loops":
-        changedPlan.joinMethod = "nested-loops"
-      elif changedPlan.joinMethod is "nested-loops":
-        changedPlan.joinMethod = "block-nested-loops"
+      if changedPlan.root.joinMethod is "block-nested-loops":
+        changedPlan.root.joinMethod = "nested-loops"
+      elif changedPlan.root.joinMethod is "nested-loops":
+        changedPlan.root.joinMethod = "block-nested-loops"
     else:
-      tempPlan = changedPlan.lhsPlan
-      changedPlan.lhsPlan = changedPlan.rhsPlan
-      changedPlan.rhsPlan = tempPlan
+      tempPlan = changedPlan.root.lhsPlan
+      changedPlan.root.lhsPlan = changedPlan.root.rhsPlan
+      changedPlan.root.rhsPlan = tempPlan
 
-      tempSchema = changedPlan.lhsSchema
-      changedPlan.lhsSchema = changedPlan.rhsSchema
-      changedPlan.rhsSchema = tempSchema
+      tempSchema = changedPlan.root.lhsSchema
+      changedPlan.root.lhsSchema = changedPlan.root.rhsSchema
+      changedPlan.root.rhsSchema = tempSchema
     return changedPlan
 
 
@@ -427,14 +435,14 @@ class Optimizer:
         return True
       elif currType is "Project" or currType is "Select" or currType is "GroupBy":
         currNode = currNode.subplan
+      elif currType is "TableScan":
+          return False
       elif currType is "Union" or "Join":
         if currNode.rhsPlan is op:
           return True
         else:
           currNode = currNode.lhsPlan
-      elif currType is "TableScan":
-        return False
-
+ 
     return False
 
   def getJoins(self, plan):
@@ -481,8 +489,8 @@ class Optimizer:
       elif foundJoin is True:
         if "Join" in currType:
           key = frozenset([currNode.lhsPlan, currNode.rhsPlan])
-          value = currNode.joinExpr
-          joinExprList[key] = value
+          expr = currNode.joinExpr
+          self.joinExprList[key] = expr
 
           self.joinList.append(currNode.lhsPlan)
           #print("Appended... " +  currNode.lhsPlan.operatorType() + " rather than " + currNode.rhsPlan.operatorType())
@@ -492,7 +500,11 @@ class Optimizer:
             if not retrieved.root.operatorType().endswith("Join"):
               self.joinList.append(retrieved.root)
               print("Recursively appended... " + self.joinList[-1].operatorType())
-          return None
+          if currNode is prevNode:
+            return None
+          else:
+            prevNode.subplan = None #TODO handle the different kinds of operators
+            return preJoin
         elif currType is "Project" or currType == "Select" or currType == "GroupBy":
           prevNode = currNode
           if currNode.subPlan is None:
