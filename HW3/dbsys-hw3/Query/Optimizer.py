@@ -349,34 +349,25 @@ class Optimizer:
       for o in optimalList:
         for i in joinList:
           if not insidePlan(i, o):
-            tempPlan = Plan(root=Join())
-            tempPlan.
 
-          # If the current i is not in this plan, let's see the optimal plan.
+            tempPlan = Plan(root=Join()) # Initialize the join properly
+            bestPlan = tempPlan
+            minCost = tempPlan.cost(False)
+
+            tempPlan.joinMethod="nested-loops" # as opposed to "block-nested-loops"
+
+            cost = tempPlan.cost
+            if(cost < minCost):
+              minCost = cost
+              bestPlan = tempPlan
+
+            #reinitialize tempPlan the other way around.
+
+            tempList.append(tempPlan)
 
       optimalList = tempList
 
-
-
-    for i in joinList:
-      for j in joinList:
-        for k in relationsInvolved:
-          if k in j.relations():
-            #Test the different join orderings
-            oldFirst =  True
-            joinType = "block-nested-loops"
-            minCost = sys.maxsize
-
-            #Test the 2 orders and 2 kinds of join's costs. Return with the minimum
-            tempPlan = Plan()
-
-            cost = self.getPlanCost(tempPlan)
-
-            newList.append(tempPlan)
-
-      joinList = newList
-    return None
-#    return Plan(root = newList[0])
+    return optimalList[0]
 
   def insidePlan(self, op, plan):
     currNode = plan.root
