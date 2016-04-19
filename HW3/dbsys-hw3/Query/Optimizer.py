@@ -346,7 +346,7 @@ class Optimizer:
       print(i)
 
     # TODO make sure what the upperbound for the outermost for loop is
-    for x in range(1, len(self.joinList) + 1):
+    for x in range(0, len(self.joinList) + 1):
       tempList = list()
       for o in optimalList:
         for i in self.joinList:
@@ -389,7 +389,7 @@ class Optimizer:
 
               tempList.append(bestPlan)
 
-      optimalList = tempList
+      optimalList = copy.copy(tempList)
 
       currNode = preJoin.root
       while currNode is not None:
