@@ -332,25 +332,40 @@ class Optimizer:
     plan.prepare(self.db)
 
     preJoin = self.getJoins(plan)
+    ret = Plan(root=preJoin.root)
+
+    optimalList = list()
+
+    for i in joinList:
+      optimalList.append(Plan(root=i))
+
+      # For each pass, do:
+      # 1) an enumeration of viable candidate plans for the given subsets of relations
+      # 2) and an evaluation of the best plan in each subset
+
+    # TODO make sure what the upperbound for the outermost for loop is
+    for x in range(1, len(joinList) + 1):
+      tempList = list()
+      for o in optimalList:
+        for i in joinList:
+          if not insidePlan(i, o):
+            tempPlan = Plan(root=Join())
+            tempPlan.
+
+          # If the current i is not in this plan, let's see the optimal plan.
+
+      optimalList = tempList
 
 
-    # For each pass, do:
-    # 1) an enumeration of viable candidate plans for the given subsets of relations
-    # 2) and an evaluation of the best plan in each subset
 
-
-    #for i in len(relationsInvolved):
-      #joinList.append(Plan(root=relationsInvolved[i]))
-    relationsInvolved = list()
-    for i in relationsInvolved:
-      newList = list()
+    for i in joinList:
       for j in joinList:
         for k in relationsInvolved:
           if k in j.relations():
             #Test the different join orderings
             oldFirst =  True
             joinType = "block-nested-loops"
-            minCost = 2147483647
+            minCost = sys.maxsize
 
             #Test the 2 orders and 2 kinds of join's costs. Return with the minimum
             tempPlan = Plan()
@@ -363,12 +378,27 @@ class Optimizer:
     return None
 #    return Plan(root = newList[0])
 
-  def getJoins(self, plan):
-    #Everything up to the first join.
+  def insidePlan(self, op, plan):
+    currNode = plan.root
+    while currNode is not None:
+      currType = currNode.operatorType()
+      if currNode is op:
+        return True
+      elif currType is "Project" or currType is "Select" or currType is "GroupBy":
+        currNode = currNode.subplan
+      elif currType is "Union" or "Join":
+        if currNode.rhsPlan is op:
+          return True
+        else:
+          currNode = currNode.lhsPlan
+      elif currType is "TableScan":
+        return False
 
+    return False
+
+  def getJoins(self, plan):
 
     preJoin = plan
-    #preJoin = copy.copy(plan)
     foundJoin = False
 
     currNode = plan.root
@@ -382,12 +412,12 @@ class Optimizer:
       if foundJoin is False:
         if "Join" in currType:
           foundJoin = True
-          # TODO handle the None management
           if prevType is "Project" or prevType is "Select" or prevType is "GroupBy":
             prevNode.subPlan = None
-
           elif prevType is "Union":
-            prevNode.lhsPlan = None
+            prevNode.rhsPlan = None
+            # TODO is this supposed to be rhsPlan/lhsPlan in light of the lhs/rhs seeming to be switched?
+            # TODO maybe just the python queries are in the wrong order
 
         elif currType is "Project" or currType is "Select" or currType is "GroupBy":
           prevNode = currNode
@@ -410,9 +440,8 @@ class Optimizer:
       elif foundJoin is True:
         if "Join" in currType:
           self.joinList.append(currNode.lhsPlan)
-          #self.joinList.append(currNode.lhsPlan)
-          print("Appended... " +  currNode.lhsPlan.operatorType() + " rather than " + currNode.rhsPlan.operatorType())
-          print("Put back recursively... " + currNode.rhsPlan.operatorType())
+          #print("Appended... " +  currNode.lhsPlan.operatorType() + " rather than " + currNode.rhsPlan.operatorType())
+          #print("Put back recursively... " + currNode.rhsPlan.operatorType())
           retrieved = self.getJoins(Plan(root=currNode.rhsPlan))
           if retrieved is not None:
             if not retrieved.root.operatorType().endswith("Join"):
@@ -437,15 +466,6 @@ class Optimizer:
           return preJoin
 
     return preJoin
-
-  def swapJoinSubPlans(self, join):
-    temp = join.lhsPlan
-    join.lhsPlan = join.rhsPlan
-    join.rhsPlan = temp
-    join.lhsSchema = join.lhsPlan.schema()
-    join.rhsSchema = join.rhsPlan.schema()
-    join.initializeSchema()
-    return join
 
 
   # Optimize the given query plan, returning the resulting improved plan.
