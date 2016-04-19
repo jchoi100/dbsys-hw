@@ -391,19 +391,19 @@ class Optimizer:
 
       optimalList = copy.copy(tempList)
 
-      currNode = preJoin.root
-      while currNode is not None:
-        currType = currNode.operatorType()
-        if currType is "Project" or currType is "Select" or currType is "GroupBy":
-          if currNode.subPlan is not None:
-            currNode = currNode.subPlan
-          else:
-            currNode = None
-        elif currType is "Union" or "Join":
-          if currNode.lhsPlan is not None: #is this lhs/rhs?
-            currNode = currNode.lhsPlan
-          else:
-            currNode = None
+    currNode = preJoin.root
+    while currNode is not None:
+      currType = currNode.operatorType()
+      if currType is "Project" or currType is "Select" or currType is "GroupBy":
+        if currNode.subPlan is not None:
+          currNode = currNode.subPlan
+        else:
+          currNode = None
+      elif currType is "Union" or "Join":
+        if currNode.lhsPlan is not None: #is this lhs/rhs?
+          currNode = currNode.lhsPlan
+        else:
+          currNode = None
 
     currNode = optimalList[0].root
     return preJoin
@@ -442,7 +442,7 @@ class Optimizer:
           return True
         else:
           currNode = currNode.lhsPlan
- 
+
     return False
 
   def getJoins(self, plan):
