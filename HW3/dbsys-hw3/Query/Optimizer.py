@@ -378,7 +378,7 @@ class Optimizer:
       currType = currNode.operatorType()
       prevType = prevNode.operatorType()
 
-      print(currType)
+      print(currNode.explain())
       if foundJoin is False:
         if "Join" in currType:
           foundJoin = True
