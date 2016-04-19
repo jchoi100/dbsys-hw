@@ -382,8 +382,8 @@ class Optimizer:
       if foundJoin is False:
         if "Join" in currType:
           foundJoin = True
-
-          if prevType is "Project" or prevType is "Select" or prevType is "TableScan" or prevType is "GroupBy":
+          # TODO handle the None management
+          if prevType is "Project" or prevType is "Select" or prevType is "GroupBy":
             prevNode.subPlan = None
 
           elif prevType is "Union":
@@ -409,13 +409,16 @@ class Optimizer:
 
       elif foundJoin is True:
         if "Join" in currType:
-          self.joinList.append(currNode.rhsPlan)
+          self.joinList.append(currNode.lhsPlan)
           #self.joinList.append(currNode.lhsPlan)
-          print("Appended... " +  currNode.rhsPlan.operatorType())
-          print("Put back recursively... " + currNode.lhsPlan.operatorType())
-          self.joinList.append(self.getJoins(Plan(root=currNode.lhsPlan)).root)
-          print("Recursively appended... " + self.joinList[-1].operatorType())
-          currNode = currNode.lhsPlan
+          print("Appended... " +  currNode.lhsPlan.operatorType() + " rather than " + currNode.rhsPlan.operatorType())
+          print("Put back recursively... " + currNode.rhsPlan.operatorType())
+          retrieved = self.getJoins(Plan(root=currNode.rhsPlan))
+          if retrieved is not None:
+            if not retrieved.root.operatorType().endswith("Join"):
+              self.joinList.append(retrieved.root)
+              print("Recursively appended... " + self.joinList[-1].operatorType())
+          return None
         elif currType is "Project" or currType == "Select" or currType == "GroupBy":
           prevNode = currNode
           if currNode.subPlan is None:
