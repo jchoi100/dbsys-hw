@@ -93,16 +93,16 @@ print(query4.explain())
 """
 Pushdown Option
 """
-optimized_query = db.optimizer.pushdownOperators(query4)
+pushdown_query = db.optimizer.pushdownOperators(query4)
 
 print("\n")
-print("Optimized Explain: ")
-print(optimized_query.explain())
-print("Optimized Results: ")
-#opt_qresults = [optimized_query.schema().unpack(tup) \
-#        for page in db.processQuery(optimized_query) \
+print("PushedDown Explain: ")
+print(pushdown_query.explain())
+print("PushedDown Results: ")
+#pushdown_qresults = [pushdown_query.schema().unpack(tup) \
+#        for page in db.processQuery(pushdown_query) \
 #        for tup in page[1]]
-#print(opt_qresults)
+#print(pushdown_qresults)
 
 print("Join optimizing...\n")
 join_query = db.optimizer.pickJoinOrder(query4)
