@@ -98,10 +98,14 @@ optimized_query = db.optimizer.pushdownOperators(query4)
 print("\n")
 print("Optimized Explain: ")
 print(optimized_query.explain())
-# print("Optimized Results: ")
-# opt_qresults = [optimized_query.schema().unpack(tup) \
-#         for page in db.processQuery(optimized_query) \
-#         for tup in page[1]]
-# print(opt_qresults)
+print("Optimized Results: ")
+#opt_qresults = [optimized_query.schema().unpack(tup) \
+#        for page in db.processQuery(optimized_query) \
+#        for tup in page[1]]
+#print(opt_qresults)
 
-
+print("Join optimizing...\n")
+join_query = db.optimizer.pickJoinOrder(query4)
+print("Joins broken down\n")
+for i in db.optimizer.joinList:
+  print(i.operatorType())

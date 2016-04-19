@@ -185,39 +185,11 @@ class Optimizer:
     """
     Project pushdown.
     """
-    # First traverse down the tree and keep a list of all the attributes that
-    # ever get used by any operator.
-    # self.traverseTreeProject(myRoot)
-    # For each field in the list created above, create a dictionary to sort
-    # the fields by their base tables.
-    # For each value (list of attributes) corresponding to a key (table name) in 
-    # the dictionary, create a Project operator on those attributes.
-    # Attach this operator right above the appropriate base table in the Plan.
-    # for field in self.projPredicates:
-    #   res, tableParent = self.findTableParent(myRoot, None, field)
-    #   newProject = Project(subPlan = res, projectExprs = {field: (field, )})
+    self.traverseTreeProject(myRoot)
+    print(self.projPredicates)
 
     return Plan(root = myRoot)
 
-  # Helper method for Project pushdown.
-  def findTableParent(self, currPlan, backupParent, field):
-    if currPlan.operatorType() is "TableScan" and field in currPlan.schema().fields:
-      return currPlan, backupParent
-    else:
-      if currPlan.operatorType() is "Select" or \
-         currPlan.operatorType() is "GroupBy" or \
-         currPlan.operatorType() is "Project":
-        return self.findTableParent(currPlan.subPlan, currPlan, field)
-      elif currPlan.operatorType() is "Union" or \
-            currPlan.operatorType().endswith("Join"):
-        leftSearch, bup = self.findTableParent(currPlan.lhsPlan, currPlan, field)
-        rightSearch, bup = self.findTableParent(currPlan.rhsPlan, currPlan, field)
-        if leftSearch is not None:
-          return leftSearch, bup
-        else:
-          return rightSearch, bup
-
-  # Helper method for Select pushdown.
   def findFirstMatch(self, currPlan, backupParent, predAttributes):
     currPAttributes = currPlan.schema().fields
     if self.firstIsSubsetOfSecond(predAttributes, currPAttributes):
@@ -238,7 +210,6 @@ class Optimizer:
         else:
           return rightSearch, bup
 
-  # Helper method for Select pushdown.
   # Traverse the plan tree while picking out the select operators.
   # Save the picked out select operators in self.rawPredicates.
   # Recursively traverse the tree. Upon returning from the previous
@@ -281,7 +252,6 @@ class Optimizer:
       curr.subPlan = self.traverseTreeSelect(childPlan)
     return curr
 
-  # Helper method for Project pushdown.
   def traverseTreeProject(self, curr):
     if curr.operatorType().endswith("Join"):
       currRawJoinExpr = curr.joinExpr
@@ -314,6 +284,38 @@ class Optimizer:
     else:
       return
 
+  # def traverseTreeProject(self, curr):
+  #   if curr.operatorType().endswith("Join") or \
+  #     curr.operatorType() is "Union":
+  #     leftChild = curr.lhsPlan
+  #     rightChild = curr.rhsPlan
+  #     while leftChild.operatorType() is "Project":
+  #       self.rawProjPredicates.append(leftChild.projectExprs)
+  #       leftChild = leftChild.subPlan
+  #     while rightChild.operatorType() is "Project":
+  #       self.rawProjPredicates.append(rightChild.projectExprs)
+  #       rightChild = rightChild.subPlan
+  #     curr.lhsPlan = self.traverseTreeProject(leftChild)
+  #     curr.rhsPlan = self.traverseTreeProject(rightChild)
+  #   elif curr.operatorType() is "Select":
+  #     childPlan = curr.subPlan
+  #     while childPlan.operatorType() is "Project":
+  #       self.rawProjPredicates.append(childPlan.projectExprs)
+  #       childPlan = childPlan.subPlan
+  #     curr.subPlan = self.traverseTreeProject(childPlan)
+  #   elif curr.operatorType() is "Project":
+  #     self.rawProjPredicates.append(curr.projectExprs)
+  #     curr.subPlan = self.traverseTreeProject(curr.subPlan)
+  #   elif curr.operatorType() is "TableScan":
+  #     return curr
+  #   else:
+  #     childPlan = curr.subPlan
+  #     while childPlan.operatorType() is "Project":
+  #       self.rawProjPredicates.append(childPlan.projectExprs)
+  #       childPlan = childPlan.subPlan
+  #     curr.subPlan = self.traverseTreeProject(childPlan)
+  #   return curr
+
   # Check if "firstSet" is a subset of "secondSet".
   # Both input "set"s are python lists.
   # Return True if so, False if not.
@@ -339,8 +341,8 @@ class Optimizer:
 
     #for i in len(relationsInvolved):
       #joinList.append(Plan(root=relationsInvolved[i]))
-
-    for i in len(relationsInvolved):
+    relationsInvolved = list()
+    for i in relationsInvolved:
       newList = list()
       for j in joinList:
         for k in relationsInvolved:
@@ -358,15 +360,15 @@ class Optimizer:
             newList.append(tempPlan)
 
       joinList = newList
-
-    return Plan(root = newList[0])
+    return None
+#    return Plan(root = newList[0])
 
   def getJoins(self, plan):
     #Everything up to the first join.
 
 
-    #preJoin = plan
-    preJoin = copy.copy(plan)
+    preJoin = plan
+    #preJoin = copy.copy(plan)
     foundJoin = False
 
     currNode = plan.root
@@ -376,17 +378,18 @@ class Optimizer:
       currType = currNode.operatorType()
       prevType = prevNode.operatorType()
 
+      print(currType)
       if foundJoin is False:
         if "Join" in currType:
           foundJoin = True
-
-          if prevType is "Project" or prevType is "Select" or prevType is "TableScan" or prevType is "GroupBy":
+          # TODO handle the None management
+          if prevType is "Project" or prevType is "Select" or prevType is "GroupBy":
             prevNode.subPlan = None
 
           elif prevType is "Union":
             prevNode.lhsPlan = None
 
-        elif currType is "Project" or currType is "Select" or currType is "TableScan" or currType is "GroupBy":
+        elif currType is "Project" or currType is "Select" or currType is "GroupBy":
           prevNode = currNode
           if currNode.subPlan is None:
             currNode = None
@@ -399,13 +402,24 @@ class Optimizer:
             currNode = None
           else:
             currNode = currNode.lhsPlan
+
+        elif currType is "TableScan":
+          return preJoin
+
 
       elif foundJoin is True:
         if "Join" in currType:
-          self.joinList.append(currNode.rhsPlan)
-          self.joinList.append(self.getJoins(Plan(currNode.lhsPlan)))
-
-        elif currType is "Project" or currType == "Select" or currType == "TableScan" or currType == "GroupBy":
+          self.joinList.append(currNode.lhsPlan)
+          #self.joinList.append(currNode.lhsPlan)
+          print("Appended... " +  currNode.lhsPlan.operatorType() + " rather than " + currNode.rhsPlan.operatorType())
+          print("Put back recursively... " + currNode.rhsPlan.operatorType())
+          retrieved = self.getJoins(Plan(root=currNode.rhsPlan))
+          if retrieved is not None:
+            if not retrieved.root.operatorType().endswith("Join"):
+              self.joinList.append(retrieved.root)
+              print("Recursively appended... " + self.joinList[-1].operatorType())
+          return None
+        elif currType is "Project" or currType == "Select" or currType == "GroupBy":
           prevNode = currNode
           if currNode.subPlan is None:
             currNode = None
@@ -418,6 +432,9 @@ class Optimizer:
             currNode = None
           else:
             currNode = currNode.lhsPlan
+
+        elif currType is "TableScan":
+          return preJoin
 
     return preJoin
 
