@@ -71,5 +71,5 @@ JoinOrder Option
 joined_query = db.optimizer.pickJoinOrder(query2)
 print("\nBroken down joins:")
 for i in db.optimizer.joinList:
-  print(i.operatorType())
+  print(i.explain())
 #print(db.optimizer.joinList)

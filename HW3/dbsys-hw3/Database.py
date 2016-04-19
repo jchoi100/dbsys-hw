@@ -3,6 +3,7 @@ import json, io, os, os.path
 from Catalog.Schema        import DBSchema, DBSchemaEncoder, DBSchemaDecoder
 from Query.Plan            import PlanBuilder
 from Query.Optimizer       import Optimizer
+from Query.Operators.BushyOptimizer  import BushyOptimizer
 from Storage.StorageEngine import StorageEngine
 
 class Database:
