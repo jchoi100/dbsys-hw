@@ -54,7 +54,8 @@ class Optimizer:
     self.rawProjPredicates = [] # list of comma-formatted projectExprs
     self.projPredicates = [] # list of comma-separated projectExprs
 
-    self.joinList = list() #Tables (possibly with non-join operations) that are joined in the initial query
+    self.joinList = list() #Tablescans (possibly with other non-join operations) that are joined in the initial query
+    self.joinExprList = dict() Expressions in the joins
 
   # Caches the cost of a plan computed during query optimization.
   def addPlanCost(self, plan, cost):
@@ -348,26 +349,75 @@ class Optimizer:
       tempList = list()
       for o in optimalList:
         for i in joinList:
-          if not insidePlan(i, o):
+          if not insidePlan(i, o): #TODO necessary?
+            if joinExprList.has_key(o.root, i):
 
-            tempPlan = Plan(root=Join()) # Initialize the join properly
-            bestPlan = tempPlan
-            minCost = tempPlan.cost(False)
+              tempJoin = Join(lhsPlan=o, rhsPlan=i, lhsSchema = o.schema(), \
+              rhsSchema = i.schema(), joinMethod="block-nested-loops", joinExpr=joinExprList.get(frozenset(o.root, i)))
 
-            tempPlan.joinMethod="nested-loops" # as opposed to "block-nested-loops"
-
-            cost = tempPlan.cost
-            if(cost < minCost):
-              minCost = cost
+              # o first, BNL
+              tempPlan = Plan(root=tempJoin)
+              tempPlan.prepare(self.db)
               bestPlan = tempPlan
+              minCost = tempPlan.cost(False)
 
-            #reinitialize tempPlan the other way around.
+              # i first, BNL
+              tempPlan = swapPlan(tempPlan, False)
+              tempPlan.prepare(self.db)
+              cost = tempPlan.cost(False)
+              if(cost < minCost):
+                minCost = cost
+                bestPlan = tempPlan
 
-            tempList.append(tempPlan)
+              # i first, NL
+              tempPlan = swapPlan(tempPlan, True)
+              tempPlan.prepare(self.db)
+              cost = tempPlan.cost(False)
+              if(cost < minCost):
+                minCost = cost
+                bestPlan = tempPlan
+
+              # o first, NL
+              tempPlan = swapPlan(tempPlan, False)
+              tempPlan.prepare(self.db)
+              cost = tempPlan.cost(False)
+              if(cost < minCost):
+                minCost = cost
+                bestPlan = tempPlan
+
+              tempList.append(bestPlan)
 
       optimalList = tempList
 
-    return optimalList[0]
+      currNode = preJoin.root
+      while currNode is not None:
+        currType = currNode.operatorType()
+        if currType is "Project" or currType is "Select" or currType is "GroupBy":
+          currNode = currNode.subplan
+        elif currType is "Union" or "Join":
+          currNode = currNode.lhsPlan
+
+    currNode = optimalList[0].root
+    return preJoin
+
+  # Swap the method of the join if method, otherwise swap plans
+  def swapPlan(self, plan, method):
+    changedPlan = plan
+    if method:
+      if changedPlan.joinMethod is "block-nested-loops":
+        changedPlan.joinMethod = "nested-loops"
+      elif changedPlan.joinMethod is "nested-loops":
+        changedPlan.joinMethod = "block-nested-loops"
+    else:
+      tempPlan = changedPlan.lhsPlan
+      changedPlan.lhsPlan = changedPlan.rhsPlan
+      changedPlan.rhsPlan = tempPlan
+
+      tempSchema = changedPlan.lhsSchema
+      changedPlan.lhsSchema = changedPlan.rhsSchema
+      changedPlan.rhsSchema = tempSchema
+    return changedPlan
+
 
   def insidePlan(self, op, plan):
     currNode = plan.root
@@ -430,6 +480,10 @@ class Optimizer:
 
       elif foundJoin is True:
         if "Join" in currType:
+          key = frozenset([currNode.lhsPlan, currNode.rhsPlan])
+          value = currNode.joinExpr
+          joinExprList[key] = value
+
           self.joinList.append(currNode.lhsPlan)
           #print("Appended... " +  currNode.lhsPlan.operatorType() + " rather than " + currNode.rhsPlan.operatorType())
           #print("Put back recursively... " + currNode.rhsPlan.operatorType())
