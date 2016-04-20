@@ -186,8 +186,8 @@ class Optimizer:
     """
     Project pushdown.
     """
-    self.traverseTreeProject(myRoot)
-    print(self.projPredicates)
+    # self.traverseTreeProject(myRoot)
+    # print(self.projPredicates)
 
     return Plan(root = myRoot)
 
@@ -353,24 +353,24 @@ class Optimizer:
                 minCost = cost
                 bestPlan = tempPlan
 
-              print("bestPlan " + bestPlan.explain())
+              # print("bestPlan " + bestPlan.explain())
               oldNode = self.joinExprList[tempKey][1]
               tempList.append((bestPlan, oldNode))
 
       optimalList = copy.copy(tempList)
 
-    print("Optimal plan:\n" + optimalList[0][0].explain())
+    # print("Optimal plan:\n" + optimalList[0][0].explain())
     currNode = preJoin.root
     while currNode is not None:
       currType = currNode.operatorType()
-      print(currType)
+      # print(currType)
       if currType is "Project" or currType is "Select" or currType is "GroupBy":
         if currNode.subPlan is not None:
           currNode = currNode.subPlan
         else:
           currNode.subPlan = optimalList[0][0].root
       elif currType is "TableScan":
-        print("Uh oh")
+        # print("Uh oh")
         currNode = None
       elif currType is "Union" or "Join":
         if currNode.rhsPlan is not None: #is this lhs/rhs?
@@ -430,7 +430,7 @@ class Optimizer:
       currType = currNode.operatorType()
       prevType = prevNode.operatorType()
 
-      print(currNode.explain())
+      # print(currNode.explain())
       if foundJoin is False:
         if "Join" in currType:
           foundJoin = True
@@ -474,7 +474,7 @@ class Optimizer:
           if retrieved is not None:
             if not retrieved.root.operatorType().endswith("Join"):
               self.joinList.append(retrieved.root)
-              print("Recursively appended... " + self.joinList[-1].operatorType())
+              # print("Recursively appended... " + self.joinList[-1].operatorType())
           if currNode is prevNode:
             return None
           else:
