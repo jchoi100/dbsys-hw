@@ -360,18 +360,18 @@ class Optimizer:
     if len(self.joinList) is 0:
       return plan
     optimalList = list()
-    print("\nContents of joinList:")
+    # print("\nContents of joinList:")
     for i in self.joinList:
-      print(i.explain())
+      # print(i.explain())
       optimalList.append((Plan(root=i), i))
 
-    print("\nContents for joinExprList:")
+    # print("\nContents for joinExprList:")
     for i, _ in self.joinExprList:
-      print(i)
+      # print(i)
 
     # TODO make sure what the upperbound for the outermost for loop is
     for x in range(2, len(self.joinList) + 1):
-      print("\nOn run to generate size of " + str(x))
+      # print("\nOn run to generate size of " + str(x))
       tempList = list()
       for o, n in optimalList:
         for i in self.joinList:
@@ -379,12 +379,12 @@ class Optimizer:
             tempKey = frozenset([n, i])
             if n is None:
               tempKey = frozenset([o, i])
-              print("Looking for " + o.explain() + "\n and " + i.explain())
+              # print("Looking for " + o.explain() + "\n and " + i.explain())
             else:
-              print("Looking for " + n.explain() + "\n and " + i.explain())
+              # print("Looking for " + n.explain() + "\n and " + i.explain())
 
             if tempKey in self.joinExprList:
-              print("Confirmed ( " + n.explain() + ", " + i.explain() + "\n in joinList" + self.joinExprList[tempKey][0])
+              # print("Confirmed ( " + n.explain() + ", " + i.explain() + "\n in joinList" + self.joinExprList[tempKey][0])
               tempJoin = Join(o.root,i, lhsSchema=o.schema(), \
               rhsSchema=i.schema(), method="block-nested-loops", expr=self.joinExprList[tempKey][0])
 
@@ -418,24 +418,24 @@ class Optimizer:
                 minCost = cost
                 bestPlan = tempPlan
 
-              print("bestPlan " + bestPlan.explain())
+              # print("bestPlan " + bestPlan.explain())
               oldNode = self.joinExprList[tempKey][1]
               tempList.append((bestPlan, oldNode))
 
       optimalList = copy.copy(tempList)
 
-    print("Optimal plan:\n" + optimalList[0][0].explain())
+    # print("Optimal plan:\n" + optimalList[0][0].explain())
     currNode = preJoin.root
     while currNode is not None:
       currType = currNode.operatorType()
-      print(currType)
+      # print(currType)
       if currType is "Project" or currType is "Select" or currType is "GroupBy":
         if currNode.subPlan is not None:
           currNode = currNode.subPlan
         else:
           currNode.subPlan = optimalList[0][0].root
       elif currType is "TableScan":
-        print("Uh oh")
+        # print("Uh oh")
         currNode = None
       elif currType is "Union" or "Join":
         if currNode.rhsPlan is not None: #is this lhs/rhs?
@@ -495,7 +495,7 @@ class Optimizer:
       currType = currNode.operatorType()
       prevType = prevNode.operatorType()
 
-      print(currNode.explain())
+      # print(currNode.explain())
       if foundJoin is False:
         if "Join" in currType:
           foundJoin = True
@@ -539,7 +539,7 @@ class Optimizer:
           if retrieved is not None:
             if not retrieved.root.operatorType().endswith("Join"):
               self.joinList.append(retrieved.root)
-              print("Recursively appended... " + self.joinList[-1].operatorType())
+              # print("Recursively appended... " + self.joinList[-1].operatorType())
           if currNode is prevNode:
             return None
           else:
