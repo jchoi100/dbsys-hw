@@ -359,7 +359,7 @@ class Optimizer:
               print("Looking for " + o.explain() + "\n and " + i.explain())
             else:
               print("Looking for " + n.explain() + "\n and " + i.explain())
-  
+
             if tempKey in self.joinExprList:
               print("Confirmed ( " + n.explain() + ", " + i.explain() + "\n in joinList" + self.joinExprList[tempKey][0])
               tempJoin = Join(o.root,i, lhsSchema=o.schema(), \
@@ -400,7 +400,7 @@ class Optimizer:
               tempList.append((bestPlan, oldNode))
 
       optimalList = copy.copy(tempList)
-    
+
     print("Optimal plan:\n" + optimalList[0][0].explain())
     currNode = preJoin.root
     while currNode is not None:
@@ -415,8 +415,8 @@ class Optimizer:
         print("Uh oh")
         currNode = None
       elif currType is "Union" or "Join":
-        if currNode.lhsPlan is not None: #is this lhs/rhs?
-          currNode = currNode.rhsPlan
+        if currNode.rhsPlan is not None: #is this lhs/rhs?
+          currNode = currNode.lhsPlan
         else:
           currNode = optimalList[0][0].root
 
@@ -453,10 +453,10 @@ class Optimizer:
       elif currType is "TableScan":
           return False
       elif currType is "Union" or "Join":
-        if currNode.rhsPlan is op:
+        if currNode.lhsPlan is op:
           return True
         else:
-          currNode = currNode.lhsPlan
+          currNode = currNode.rhsPlan
 
     return False
 
@@ -480,8 +480,8 @@ class Optimizer:
             prevNode.subPlan = None
 
           elif prevType is "Union":
-            prevNode.lhsPlan = None
             prevNode.rhsPlan = None
+            prevNode.lhsPlan = None
             # TODO is this supposed to be rhsPlan/lhsPlan in light of the lhs/rhs seeming to be switched?
             # TODO maybe just the python queries are in the wrong order
 
@@ -494,10 +494,10 @@ class Optimizer:
 
         elif currType is "Union":
           prevNode = currNode
-          if currNode.lhsPlan is None:
+          if currNode.rhsPlan is None:
             currNode = None
           else:
-            currNode = currNode.lhsPlan
+            currNode = currNode.rhsPlan
 
         elif currType is "TableScan":
           return preJoin
@@ -505,14 +505,14 @@ class Optimizer:
 
       elif foundJoin is True:
         if "Join" in currType:
-          key = frozenset([currNode.lhsPlan, currNode.rhsPlan])
+          key = frozenset([currNode.rhsPlan, currNode.lhsPlan])
           expr = currNode.joinExpr
           self.joinExprList[key] = (expr, currNode)
 
-          self.joinList.append(currNode.lhsPlan)
+          self.joinList.append(currNode.rhsPlan)
           #print("Appended... " +  currNode.lhsPlan.operatorType() + " rather than " + currNode.rhsPlan.operatorType())
           #print("Put back recursively... " + currNode.rhsPlan.operatorType())
-          retrieved = self.getJoins(Plan(root=currNode.rhsPlan))
+          retrieved = self.getJoins(Plan(root=currNode.lhsPlan))
           if retrieved is not None:
             if not retrieved.root.operatorType().endswith("Join"):
               self.joinList.append(retrieved.root)
@@ -531,10 +531,10 @@ class Optimizer:
 
         elif currType is "Union":
           prevNode = currNode
-          if currNode.lhsPlan is None:
+          if currNode.rhsPlan is None:
             currNode = None
           else:
-            currNode = currNode.lhsPlan
+            currNode = currNode.rhsPlan
 
         elif currType is "TableScan":
           return preJoin
