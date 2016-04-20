@@ -71,7 +71,7 @@ optimized_query = db.optimizer.pushdownOperators(query3)
 # print(qresults)
 
 print("\n")
-print("Optimized Explain: ")
+print("Pushdown Explain: ")
 print(optimized_query.explain())
 # print("Optimized Results: ")
 # opt_qresults = [optimized_query.schema().unpack(tup) \
@@ -80,8 +80,8 @@ print(optimized_query.explain())
 # print(opt_qresults)
 
 # print("Join query optimizing...\n")
-# joined_query = db.optimizer.pickJoinOrder(query3)
+joined_query = db.optimizer.pickJoinOrder(query3)
 # print("Join broken down:\n")
 # for i in db.optimizer.joinList:
 #   print(i.explain())
-# print ("Joined query explain:\n" + joined_query.explain())
+print("\nJoin explain:\n" + joined_query.explain())

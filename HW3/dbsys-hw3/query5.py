@@ -81,8 +81,17 @@ query5 = db.query().fromTable('region') \
 				   			'revenue': ('revenue', 'double')
 				   			}).finalize()
 
+"""
+Un-Optimized Version
+"""
+# print("\n")
 print("Un-Optimized Explain: ")
 print(query5.explain())
+
+"""
+Process Un-Optimized Query and print results.
+"""
+# print("\n")
 # print("Un-Optimized Results: ")
 # qresults = [query5.schema().unpack(tup) \
 #         for page in db.processQuery(query5) \
@@ -93,22 +102,25 @@ print(query5.explain())
 Pushdown Option
 """
 optimized_query = db.optimizer.pushdownOperators(query5)
-
 print("\n")
-print("Optimized Explain: ")
+print("Pushdown Explain: ")
 print(optimized_query.explain())
-# print("Optimized Results: ")
-
-# opt_qresults = [optimized_query.schema().unpack(tup) \
-#         for page in db.processQuery(optimized_query) \
-#         for tup in page[1]]
-# print(opt_qresults)
 
 # """
 # Join Order Option
 # """
-# join_optimized_query = db.optimizer.pickJoinOrder(optimized_query)
-# print("Join optimized:\n")
+joined_query= db.optimizer.pickJoinOrder(optimized_query)
+print("\nJoin Explain:")
 # for i in db.optimizer.joinList:
 #   print(i.explain())
-# print(join_optimized_query.explain())
+print(joined_query.explain())
+
+"""
+Process Optimized Query and print results.
+"""
+# print("\n")
+# print("Optimized Results: ")
+# opt_qresults = [optimized_query.schema().unpack(tup) \
+#         for page in db.processQuery(optimized_query) \
+#         for tup in page[1]]
+# print(opt_qresults)

@@ -57,7 +57,7 @@ Pushdown Option
 """
 optimized_query = db.optimizer.pushdownOperators(query2)
 print("\n")
-print("Optimized Explain: ")
+print("Pushdown Explain: ")
 print(optimized_query.explain())
 # print("Optimized Results: ")
 #pt_qresults = [optimized_query.schema().unpack(tup) \
@@ -68,8 +68,8 @@ print(optimized_query.explain())
 # """
 # JoinOrder Option
 # """
-# joined_query = db.optimizer.pickJoinOrder(query2)
+joined_query = db.optimizer.pickJoinOrder(query2)
 # print("\nBroken down joins:")
 # for i in db.optimizer.joinList:
 #   print(i.explain())
-# print("Explain:\n" + joined_query.explain())
+print("\nJoin Explain:\n" + joined_query.explain())
