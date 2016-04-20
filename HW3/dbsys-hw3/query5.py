@@ -92,7 +92,7 @@ print(query5.explain())
 """
 Pushdown Option
 """
-#optimized_query = db.optimizer.pushdownOperators(query5)
+optimized_query = db.optimizer.pushdownOperators(query5)
 
 #print("\n")
 #print("Optimized Explain: ")
@@ -107,7 +107,7 @@ Pushdown Option
 """
 Join Order Option
 """
-join_optimized_query = db.optimizer.pickJoinOrder(query5)
+join_optimized_query = db.optimizer.pickJoinOrder(optimized_query)
 print("Join optimized:\n")
 for i in db.optimizer.joinList:
   print(i.explain())
