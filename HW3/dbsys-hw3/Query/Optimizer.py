@@ -318,7 +318,6 @@ class Optimizer:
             tempKey = frozenset([n, i])
             if n is None:
               tempKey = frozenset([o, i])
-            else:
 
             if tempKey in self.joinExprList:
               tempJoin = Join(o.root,i, lhsSchema=o.schema(), \
