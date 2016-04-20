@@ -97,9 +97,7 @@ class Optimizer:
     Select pushdown.
     """
 
-    # Take out all select statements out of the original plan.
-    # Don't take out if this Select operator has a GroupBy below it somewhere.
-    while myRoot.operatorType() is "Select" and not self.hasGroupByBelow(myRoot):
+    while myRoot.operatorType() is "Select":
       self.rawPredicates.append(myRoot.selectExpr)
       myRoot = myRoot.subPlan
 
@@ -188,26 +186,10 @@ class Optimizer:
     """
     Project pushdown.
     """
-    # self.traverseTreeProject(myRoot)
+    self.traverseTreeProject(myRoot)
+    print(self.projPredicates)
 
     return Plan(root = myRoot)
-
-  # Checks if the myRoot object that resides in the function pushdownOperators
-  # has a GroupBy operator below it.
-  # Notice that myRoot can never be of type "GroupBy" since we first check
-  # if myRoot.operatorType() is "Select" or not.
-  # So when curr.operatorType() is "GroupBy", we will know that one of myRoot's
-  # descendants, and not myRoot itself, is of type "GroupBy".
-  def hasGroupByBelow(self, curr):
-    if curr.operatorType() is "Union" or \
-       curr.operatorType().endswith("Join"):
-      return self.hasGroupByBelow(curr.lhsPlan) or self.hasGroupByBelow(curr.rhsPlan)
-    elif curr.operatorType() is "Select" or curr.operatorType() is "Project":
-      return self.hasGroupByBelow(curr.subPlan)
-    elif curr.operatorType() is "GroupBy":
-      return True
-    else: # TableScan: we've reached the end. No GroupBys along the way.
-      return False
 
   def findFirstMatch(self, currPlan, backupParent, predAttributes):
     currPAttributes = currPlan.schema().fields
@@ -240,13 +222,11 @@ class Optimizer:
       curr.operatorType() is "Union":
       leftChild = curr.lhsPlan
       rightChild = curr.rhsPlan
-      while leftChild.operatorType() is "Select" and \
-            not self.hasGroupByBelow(leftChild):
+      while leftChild.operatorType() is "Select":
         self.rawPredicates.append(leftChild.selectExpr)
         curr.lhsPlan = leftChild.subPlan
         leftChild = curr.lhsPlan
-      while rightChild.operatorType() is "Select" and \
-            not self.hasGroupByBelow(rightChild):
+      while rightChild.operatorType() is "Select":
         self.rawPredicates.append(rightChild.selectExpr)
         curr.rhsPlan = rightChild.subPlan
         rightChild = curr.rhsPlan
@@ -254,22 +234,19 @@ class Optimizer:
       curr.rhsPlan = self.traverseTreeSelect(rightChild)
     elif curr.operatorType() is "Project":
       childPlan = curr.subPlan
-      while childPlan.operatorType() is "Select" and\
-            not self.hasGroupByBelow(childPlan):
+      while childPlan.operatorType() is "Select":
         self.rawPredicates.append(childPlan.selectExpr)
         curr.subPlan = childPlan.subPlan
         childPlan = curr.subPlan
       curr.subPlan = self.traverseTreeSelect(childPlan)
-    elif curr.operatorType() is "Select" and \
-         not self.hasGroupByBelow(curr):
+    elif curr.operatorType() is "Select":
       self.rawPredicates.append(curr.selectExpr)
       curr.subPlan = self.traverseTreeSelect(curr.subPlan)
     elif curr.operatorType() is "TableScan":
       return curr
     else:
       childPlan = curr.subPlan
-      while childPlan.operatorType() is "Select" and \
-            not self.hasGroupByBelow(childPlan):
+      while childPlan.operatorType() is "Select":
         self.rawPredicates.append(childPlan.selectExpr)
         curr.subPlan = childPlan.subPlan
         childPlan = curr.subPlan
@@ -308,38 +285,6 @@ class Optimizer:
     else:
       return
 
-  # def traverseTreeProject(self, curr):
-  #   if curr.operatorType().endswith("Join") or \
-  #     curr.operatorType() is "Union":
-  #     leftChild = curr.lhsPlan
-  #     rightChild = curr.rhsPlan
-  #     while leftChild.operatorType() is "Project":
-  #       self.rawProjPredicates.append(leftChild.projectExprs)
-  #       leftChild = leftChild.subPlan
-  #     while rightChild.operatorType() is "Project":
-  #       self.rawProjPredicates.append(rightChild.projectExprs)
-  #       rightChild = rightChild.subPlan
-  #     curr.lhsPlan = self.traverseTreeProject(leftChild)
-  #     curr.rhsPlan = self.traverseTreeProject(rightChild)
-  #   elif curr.operatorType() is "Select":
-  #     childPlan = curr.subPlan
-  #     while childPlan.operatorType() is "Project":
-  #       self.rawProjPredicates.append(childPlan.projectExprs)
-  #       childPlan = childPlan.subPlan
-  #     curr.subPlan = self.traverseTreeProject(childPlan)
-  #   elif curr.operatorType() is "Project":
-  #     self.rawProjPredicates.append(curr.projectExprs)
-  #     curr.subPlan = self.traverseTreeProject(curr.subPlan)
-  #   elif curr.operatorType() is "TableScan":
-  #     return curr
-  #   else:
-  #     childPlan = curr.subPlan
-  #     while childPlan.operatorType() is "Project":
-  #       self.rawProjPredicates.append(childPlan.projectExprs)
-  #       childPlan = childPlan.subPlan
-  #     curr.subPlan = self.traverseTreeProject(childPlan)
-  #   return curr
-
   # Check if "firstSet" is a subset of "secondSet".
   # Both input "set"s are python lists.
   # Return True if so, False if not.
@@ -360,18 +305,12 @@ class Optimizer:
     if len(self.joinList) is 0:
       return plan
     optimalList = list()
-    # print("\nContents of joinList:")
-    for i in self.joinList:
-      # print(i.explain())
-      optimalList.append((Plan(root=i), i))
 
-    # print("\nContents for joinExprList:")
-    # for i, _ in self.joinExprList:
-      # print(i)
+    for i in self.joinList:
+      optimalList.append((Plan(root=i), i))
 
     # TODO make sure what the upperbound for the outermost for loop is
     for x in range(2, len(self.joinList) + 1):
-      # print("\nOn run to generate size of " + str(x))
       tempList = list()
       for o, n in optimalList:
         for i in self.joinList:
@@ -379,12 +318,9 @@ class Optimizer:
             tempKey = frozenset([n, i])
             if n is None:
               tempKey = frozenset([o, i])
-              # print("Looking for " + o.explain() + "\n and " + i.explain())
-            # else:
-              # print("Looking for " + n.explain() + "\n and " + i.explain())
+            else:
 
             if tempKey in self.joinExprList:
-              # print("Confirmed ( " + n.explain() + ", " + i.explain() + "\n in joinList" + self.joinExprList[tempKey][0])
               tempJoin = Join(o.root,i, lhsSchema=o.schema(), \
               rhsSchema=i.schema(), method="block-nested-loops", expr=self.joinExprList[tempKey][0])
 
@@ -418,24 +354,24 @@ class Optimizer:
                 minCost = cost
                 bestPlan = tempPlan
 
-              # print("bestPlan " + bestPlan.explain())
+              print("bestPlan " + bestPlan.explain())
               oldNode = self.joinExprList[tempKey][1]
               tempList.append((bestPlan, oldNode))
 
       optimalList = copy.copy(tempList)
 
-    # print("Optimal plan:\n" + optimalList[0][0].explain())
+    print("Optimal plan:\n" + optimalList[0][0].explain())
     currNode = preJoin.root
     while currNode is not None:
       currType = currNode.operatorType()
-      # print(currType)
+      print(currType)
       if currType is "Project" or currType is "Select" or currType is "GroupBy":
         if currNode.subPlan is not None:
           currNode = currNode.subPlan
         else:
           currNode.subPlan = optimalList[0][0].root
       elif currType is "TableScan":
-        # print("Uh oh")
+        print("Uh oh")
         currNode = None
       elif currType is "Union" or "Join":
         if currNode.rhsPlan is not None: #is this lhs/rhs?
@@ -495,7 +431,7 @@ class Optimizer:
       currType = currNode.operatorType()
       prevType = prevNode.operatorType()
 
-      # print(currNode.explain())
+      print(currNode.explain())
       if foundJoin is False:
         if "Join" in currType:
           foundJoin = True
@@ -539,7 +475,7 @@ class Optimizer:
           if retrieved is not None:
             if not retrieved.root.operatorType().endswith("Join"):
               self.joinList.append(retrieved.root)
-              # print("Recursively appended... " + self.joinList[-1].operatorType())
+              print("Recursively appended... " + self.joinList[-1].operatorType())
           if currNode is prevNode:
             return None
           else:

@@ -408,6 +408,7 @@ class Join(Operator):
 
     subplanCost = sum(map(lambda x: x.cost(estimated), self.inputs()))
     totalCost = joinCost + subplanCost
+    self.initializeStatistics() #clear it
     return totalCost
 
 
