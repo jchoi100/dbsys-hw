@@ -98,15 +98,15 @@ pushdown_query = db.optimizer.pushdownOperators(query4)
 print("\n")
 print("PushedDown Explain: ")
 print(pushdown_query.explain())
-print("PushedDown Results: ")
+# print("PushedDown Results: ")
 #pushdown_qresults = [pushdown_query.schema().unpack(tup) \
 #        for page in db.processQuery(pushdown_query) \
 #        for tup in page[1]]
 #print(pushdown_qresults)
 
-print("Join optimizing...\n")
-join_query = db.optimizer.pickJoinOrder(query4)
-print("Joins broken down\n")
-for i in db.optimizer.joinList:
-  print(i.operatorType())
-print("\nJoin query: " + join_query.explain())
+# print("Join optimizing...\n")
+# join_query = db.optimizer.pickJoinOrder(query4)
+# print("Joins broken down\n")
+# for i in db.optimizer.joinList:
+#   print(i.operatorType())
+# print("\nJoin query: " + join_query.explain())

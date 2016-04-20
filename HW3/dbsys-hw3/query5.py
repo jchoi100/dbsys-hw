@@ -94,9 +94,9 @@ Pushdown Option
 """
 optimized_query = db.optimizer.pushdownOperators(query5)
 
-#print("\n")
-#print("Optimized Explain: ")
-#print(optimized_query.explain())
+print("\n")
+print("Optimized Explain: ")
+print(optimized_query.explain())
 # print("Optimized Results: ")
 
 # opt_qresults = [optimized_query.schema().unpack(tup) \
@@ -104,11 +104,11 @@ optimized_query = db.optimizer.pushdownOperators(query5)
 #         for tup in page[1]]
 # print(opt_qresults)
 
-"""
-Join Order Option
-"""
-join_optimized_query = db.optimizer.pickJoinOrder(optimized_query)
-print("Join optimized:\n")
-for i in db.optimizer.joinList:
-  print(i.explain())
-print(join_optimized_query.explain())
+# """
+# Join Order Option
+# """
+# join_optimized_query = db.optimizer.pickJoinOrder(optimized_query)
+# print("Join optimized:\n")
+# for i in db.optimizer.joinList:
+#   print(i.explain())
+# print(join_optimized_query.explain())

@@ -198,7 +198,7 @@ class Optimizer:
   # if myRoot.operatorType() is "Select" or not.
   # So when curr.operatorType() is "GroupBy", we will know that one of myRoot's
   # descendants, and not myRoot itself, is of type "GroupBy".
-  def hasGroupByBelow(curr):
+  def hasGroupByBelow(self, curr):
     if curr.operatorType() is "Union" or \
        curr.operatorType().endswith("Join"):
       return self.hasGroupByBelow(curr.lhsPlan) or self.hasGroupByBelow(curr.rhsPlan)
