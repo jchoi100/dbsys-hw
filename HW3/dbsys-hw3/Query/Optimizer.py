@@ -366,7 +366,7 @@ class Optimizer:
       optimalList.append((Plan(root=i), i))
 
     # print("\nContents for joinExprList:")
-    for i, _ in self.joinExprList:
+    # for i, _ in self.joinExprList:
       # print(i)
 
     # TODO make sure what the upperbound for the outermost for loop is
@@ -380,7 +380,7 @@ class Optimizer:
             if n is None:
               tempKey = frozenset([o, i])
               # print("Looking for " + o.explain() + "\n and " + i.explain())
-            else:
+            # else:
               # print("Looking for " + n.explain() + "\n and " + i.explain())
 
             if tempKey in self.joinExprList:
