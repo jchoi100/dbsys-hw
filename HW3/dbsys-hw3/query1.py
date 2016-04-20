@@ -41,7 +41,7 @@ print(query1.explain())
 Pushdown Option
 """
 optimized_query = db.optimizer.pushdownOperators(query1)
-
+optimized_query = db.optimizer.pickJoinOrder(optimized_query)
 print("\n")
 print("Optimized Explain: ")
 print(optimized_query.explain())

@@ -66,7 +66,9 @@ class Plan:
 
       while queue:
         (depth, operator) = queue.popleft()
-        children = operator.inputs()
+        children = None
+        if operator is not None:
+          children = operator.inputs()
         result.append((depth, operator))
         if children:
           queue.extendleft([(depth+1, c) for c in children])
@@ -100,7 +102,8 @@ class Plan:
       planDesc = []
       indent = ' ' * 2
       for (depth, operator) in self.flatten():
-        planDesc.append(indent * depth + operator.explain())
+        if operator is not None:
+          planDesc.append(indent * depth + operator.explain())
 
       return '\n'.join(planDesc)
 

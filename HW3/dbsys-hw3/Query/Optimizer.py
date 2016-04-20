@@ -334,28 +334,36 @@ class Optimizer:
 
     preJoin = self.getJoins(plan)
     ret = Plan(root=preJoin.root)
-
-
+    if len(self.joinList) is 0:
+      return plan
     optimalList = list()
-    print("Contents of joinList:\n")
+    print("\nContents of joinList:")
     for i in self.joinList:
       print(i.explain())
-      optimalList.append(Plan(root=i))
+      optimalList.append((Plan(root=i), i))
 
-    for i in self.joinExprList:
+    print("\nContents for joinExprList:")
+    for i, _ in self.joinExprList:
       print(i)
 
     # TODO make sure what the upperbound for the outermost for loop is
-    for x in range(0, len(self.joinList) + 1):
+    for x in range(2, len(self.joinList) + 1):
+      print("\nOn run to generate size of " + str(x))
       tempList = list()
-      for o in optimalList:
+      for o, n in optimalList:
         for i in self.joinList:
-          if not self.insidePlan(i, o): #TODO necessary?
-            tempKey = frozenset([o.root, i])
+          if not self.insidePlan(i, o):
+            tempKey = frozenset([n, i])
+            if n is None:
+              tempKey = frozenset([o, i])
+              print("Looking for " + o.explain() + "\n and " + i.explain())
+            else:
+              print("Looking for " + n.explain() + "\n and " + i.explain())
+  
             if tempKey in self.joinExprList:
-              print("Confirmed ( " + o.root.explain() + ", " + i.explain() + "\n in joinList" + self.joinExprList[tempKey])
+              print("Confirmed ( " + n.explain() + ", " + i.explain() + "\n in joinList" + self.joinExprList[tempKey][0])
               tempJoin = Join(o.root,i, lhsSchema=o.schema(), \
-              rhsSchema=i.schema(), method="block-nested-loops", expr=self.joinExprList[tempKey])
+              rhsSchema=i.schema(), method="block-nested-loops", expr=self.joinExprList[tempKey][0])
 
               # o first, BNL
               tempPlan = Plan(root=tempJoin)
@@ -387,25 +395,32 @@ class Optimizer:
                 minCost = cost
                 bestPlan = tempPlan
 
-              tempList.append(bestPlan)
+              print("bestPlan " + bestPlan.explain())
+              oldNode = self.joinExprList[tempKey][1]
+              tempList.append((bestPlan, oldNode))
 
       optimalList = copy.copy(tempList)
-
+    
+    print("Optimal plan:\n" + optimalList[0][0].explain())
     currNode = preJoin.root
     while currNode is not None:
       currType = currNode.operatorType()
+      print(currType)
       if currType is "Project" or currType is "Select" or currType is "GroupBy":
         if currNode.subPlan is not None:
           currNode = currNode.subPlan
         else:
-          currNode = None
+          currNode.subPlan = optimalList[0][0].root
+      elif currType is "TableScan":
+        print("Uh oh")
+        currNode = None
       elif currType is "Union" or "Join":
         if currNode.lhsPlan is not None: #is this lhs/rhs?
-          currNode = currNode.lhsPlan
+          currNode = currNode.rhsPlan
         else:
-          currNode = None
+          currNode = optimalList[0][0].root
 
-    currNode = optimalList[0].root
+    currNode = optimalList[0][0].root
     return preJoin
 
   # Swap the method of the join if method, otherwise swap plans
@@ -434,7 +449,7 @@ class Optimizer:
       if currNode is op:
         return True
       elif currType is "Project" or currType is "Select" or currType is "GroupBy":
-        currNode = currNode.subplan
+        currNode = currNode.subPlan
       elif currType is "TableScan":
           return False
       elif currType is "Union" or "Join":
@@ -463,7 +478,9 @@ class Optimizer:
           foundJoin = True
           if prevType is "Project" or prevType is "Select" or prevType is "GroupBy":
             prevNode.subPlan = None
+
           elif prevType is "Union":
+            prevNode.lhsPlan = None
             prevNode.rhsPlan = None
             # TODO is this supposed to be rhsPlan/lhsPlan in light of the lhs/rhs seeming to be switched?
             # TODO maybe just the python queries are in the wrong order
@@ -490,7 +507,7 @@ class Optimizer:
         if "Join" in currType:
           key = frozenset([currNode.lhsPlan, currNode.rhsPlan])
           expr = currNode.joinExpr
-          self.joinExprList[key] = expr
+          self.joinExprList[key] = (expr, currNode)
 
           self.joinList.append(currNode.lhsPlan)
           #print("Appended... " +  currNode.lhsPlan.operatorType() + " rather than " + currNode.rhsPlan.operatorType())

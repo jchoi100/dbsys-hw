@@ -80,7 +80,8 @@ print(optimized_query.explain())
 # print(opt_qresults)
 
 print("Join query optimizing...\n")
-joined_query = db.optimizer.getJoins(query3)
+joined_query = db.optimizer.pickJoinOrder(query3)
 print("Join broken down:\n")
 for i in db.optimizer.joinList:
   print(i.explain())
+print ("Joined query explain:\n" + joined_query.explain())

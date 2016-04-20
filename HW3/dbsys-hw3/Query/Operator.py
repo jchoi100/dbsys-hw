@@ -164,9 +164,9 @@ class Operator:
   # metric (e.g., number of I/Os, CPU cycles, etc). This is also either
   # as an estimate or a profiled actual cost.
   def cost(self, estimated):
-    subPlanCost = sum(map(lambda x: x.cost(estimated), self.inputs()))
+    subPlanCost = sum(map(lambda x: x.cost(estimated) if x is not None else 0, self.inputs()))
     return self.localCost(estimated) + subPlanCost
 
   def localCost(self, estimated):
-    numInputs = sum(map(lambda x: x.cardinality(estimated), self.inputs()))
+    numInputs = sum(map(lambda x: x.cardinality(estimated) if x is not None else 0, self.inputs()))
     return numInputs * self.tupleCost

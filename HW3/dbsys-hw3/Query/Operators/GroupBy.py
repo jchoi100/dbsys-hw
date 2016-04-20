@@ -195,5 +195,5 @@ class GroupBy(Operator):
     # These seem to be the useful statistics.
     groupCost =  self.pageCount + self.partitionCount + self.tupleCount + self.aggregationCount
 
-    subplanCost = sum(map(lambda x: x.cost(estimated), self.inputs()))
+    subplanCost = sum(map(lambda x: x.cost(estimated) if x is not None else 0, self.inputs()))
     return groupCost + subplanCost

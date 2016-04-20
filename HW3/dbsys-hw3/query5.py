@@ -111,3 +111,4 @@ join_optimized_query = db.optimizer.pickJoinOrder(query5)
 print("Join optimized:\n")
 for i in db.optimizer.joinList:
   print(i.explain())
+print(join_optimized_query.explain())

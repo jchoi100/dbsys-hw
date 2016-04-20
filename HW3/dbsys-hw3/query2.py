@@ -55,12 +55,12 @@ print(query2.explain())
 """
 Pushdown Option
 """
-#optimized_query = db.optimizer.pushdownOperators(query2)
-#print("\n")
-#print("Optimized Explain: ")
-#print(optimized_query.explain())
-#print("Optimized Results: ")
-#opt_qresults = [optimized_query.schema().unpack(tup) \
+optimized_query = db.optimizer.pushdownOperators(query2)
+print("\n")
+print("Optimized Explain: ")
+print(optimized_query.explain())
+print("Optimized Results: ")
+#pt_qresults = [optimized_query.schema().unpack(tup) \
 #        for page in db.processQuery(optimized_query) \
 #        for tup in page[1]]
 #print(opt_qresults)
