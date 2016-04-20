@@ -1,0 +1,26 @@
+Un-Optimized Explain: 
+Project[5,cost=6205.00](projections={'promo_revenue': ('promo_revenue', 'double')})
+  GroupBy[4,cost=6205.00](groupSchema=att[(att,int)], aggSchema=promo_revenue[(promo_revenue,double)])
+    Select[3,cost=6205.00](predicate='L_SHIPDATE >= 19950901 and L_SHIPDATE < 19951001')
+      NLJoin[2,cost=6205.00](expr='L_PARTKEY == P_PARTKEY')
+        TableScan[1,cost=200.00](part)
+        TableScan[0,cost=6005.00](lineitem)
+
+
+Pushdown Explain: 
+Project[5,cost=12210.00](projections={'promo_revenue': ('promo_revenue', 'double')})
+  GroupBy[4,cost=12210.00](groupSchema=att[(att,int)], aggSchema=promo_revenue[(promo_revenue,double)])
+    NLJoin[2,cost=12210.00](expr='L_PARTKEY == P_PARTKEY')
+      TableScan[1,cost=200.00](part)
+      Select[6,cost=12010.00](predicate='(L_SHIPDATE >= 19950901)')
+        Select[7,cost=12010.00](predicate='(L_SHIPDATE < 19951001)')
+          TableScan[0,cost=6005.00](lineitem)
+
+Join Explain:
+Project[5,cost=12210.00](projections={'promo_revenue': ('promo_revenue', 'double')})
+  GroupBy[4,cost=12210.00](groupSchema=att[(att,int)], aggSchema=promo_revenue[(promo_revenue,double)])
+    BNLJoin[8,cost=12210.00](expr='L_PARTKEY == P_PARTKEY')
+      Select[6,cost=12010.00](predicate='(L_SHIPDATE >= 19950901)')
+        Select[7,cost=12010.00](predicate='(L_SHIPDATE < 19951001)')
+          TableScan[0,cost=6005.00](lineitem)
+      TableScan[1,cost=200.00](part)
