@@ -101,15 +101,15 @@ Process Un-Optimized Query and print results.
 """
 Pushdown Option
 """
-optimized_query = db.optimizer.pushdownOperators(query5)
+pushdown_query = db.optimizer.pushdownOperators(query5)
 print("\n")
 print("Pushdown Explain: ")
-print(optimized_query.explain())
+print(pushdown_query.explain())
 
 # """
 # Join Order Option
 # """
-joined_query= db.optimizer.pickJoinOrder(optimized_query)
+joined_query= db.optimizer.pickJoinOrder(pushdown_query)
 print("\nJoin Explain:")
 # for i in db.optimizer.joinList:
 #   print(i.explain())
@@ -120,7 +120,7 @@ Process Optimized Query and print results.
 """
 # print("\n")
 # print("Optimized Results: ")
-# opt_qresults = [optimized_query.schema().unpack(tup) \
-#         for page in db.processQuery(optimized_query) \
+# opt_qresults = [pushdown_query.schema().unpack(tup) \
+#         for page in db.processQuery(pushdown_query) \
 #         for tup in page[1]]
 # print(opt_qresults)

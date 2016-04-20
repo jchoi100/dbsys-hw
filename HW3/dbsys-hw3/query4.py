@@ -105,7 +105,7 @@ print(pushdown_query.explain())
 #print(pushdown_qresults)
 
 # print("Join optimizing...\n")
-joined_query = db.optimizer.pickJoinOrder(query4)
+joined_query = db.optimizer.pickJoinOrder(pushdown_query)
 # print("Joins broken down\n")
 # for i in db.optimizer.joinList:
 #   print(i.operatorType())

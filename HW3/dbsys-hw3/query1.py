@@ -53,5 +53,5 @@ print(optimized_query.explain())
 
 print("\n")
 print("Join Explain:")
-joined_query = db.optimizer.pickJoinOrder(query2)
+joined_query = db.optimizer.pickJoinOrder(optimized_query)
 print(join_query.explain())
