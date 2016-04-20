@@ -82,33 +82,46 @@ query4 = db.query().fromTable('nation') \
 							'C_COMMENT': ('C_COMMENT', 'char(117)')
 				   			}).finalize()
 
-print("Un-Optimized Explain: ")
-print(query4.explain())
-# print("Un-Optimized Results: ")
-# qresults = [query4.schema().unpack(tup) \
-#         for page in db.processQuery(query4) \
-#         for tup in page[1]]
-# print(qresults)
+"""
+Un-Optimized
+"""
+# print("Un-Optimized Explain: ")
+# print(query4.explain())
+print("Un-Optimized Results: ")
+qresults = [query4.schema().unpack(tup) \
+        for page in db.processQuery(query4) \
+        for tup in page[1]]
+print(qresults)
 
 """
 Pushdown Option
 """
-pushdown_query = db.optimizer.pushdownOperators(query4)
+# pushdown_query = db.optimizer.pushdownOperators(query4)
 
-print("\n")
-print("PushedDown Explain: ")
-print(pushdown_query.explain())
+# print("\n")
+# print("PushedDown Explain: ")
+# print(pushdown_query.explain())
 # print("PushedDown Results: ")
 #pushdown_qresults = [pushdown_query.schema().unpack(tup) \
 #        for page in db.processQuery(pushdown_query) \
 #        for tup in page[1]]
 #print(pushdown_qresults)
 
+"""
+Joinorder option
+"""
 # print("Join optimizing...\n")
-joined_query = db.optimizer.pickJoinOrder(pushdown_query)
-# print("Joins broken down\n")
-# for i in db.optimizer.joinList:
-#   print(i.operatorType())
-print("\n")
-print("Join Explain:")
-print(joined_query.explain())
+# joined_query = db.optimizer.pickJoinOrder(pushdown_query)
+# print("Join Explain:")
+# print(joined_query.explain())
+
+"""
+Ultimate optimizer
+"""
+# print("Optimized Results: ")
+# optimized_query = db.optimizer.optimizeQuery(query1)
+# qresults = [optimized_query.schema().unpack(tup) \
+#         for page in db.processQuery(optimized_query) \
+#         for tup in page[1]]
+# print(qresults)
+

@@ -28,7 +28,9 @@ query1 = db.query().fromTable('lineitem').where('L_SHIPDATE >= 19940101 and L_SH
 				   	  groupHashFn = (lambda gbVal: 0)) \
 				   .select({'revenue': ('revenue', 'double')}).finalize()
 
-
+"""
+Un-Optimized
+"""
 #print("Un-Optimized Explain: ")
 #print(query1.explain())
 #print("Un-Optimized Results: ")
@@ -51,10 +53,20 @@ Pushdown Option
 #         for tup in page[1]]
 # print(opt_qresults)
 
+"""
+Join order option
+"""
 #print("\n")
 #print("Join Explain:")
 #joined_query = db.optimizer.pickJoinOrder(optimized_query)
 #print(joined_query.explain())
 
+"""
+Ultimate optimizer
+"""
 print("Optimized Results: ")
-optimized_query = db.optimizer.
+optimized_query = db.optimizer.optimizeQuery(query1)
+qresults = [optimized_query.schema().unpack(tup) \
+        for page in db.processQuery(optimized_query) \
+        for tup in page[1]]
+print(qresults)
