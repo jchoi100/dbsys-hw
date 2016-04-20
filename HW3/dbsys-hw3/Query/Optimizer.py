@@ -97,7 +97,9 @@ class Optimizer:
     Select pushdown.
     """
 
-    while myRoot.operatorType() is "Select":
+    # Take out all select statements out of the original plan.
+    # Don't take out if this Select operator has a GroupBy below it somewhere.
+    while myRoot.operatorType() is "Select" and not self.hasGroupByBelow(myRoot):
       self.rawPredicates.append(myRoot.selectExpr)
       myRoot = myRoot.subPlan
 
@@ -186,10 +188,26 @@ class Optimizer:
     """
     Project pushdown.
     """
-    self.traverseTreeProject(myRoot)
-    print(self.projPredicates)
+    # self.traverseTreeProject(myRoot)
 
     return Plan(root = myRoot)
+
+  # Checks if the myRoot object that resides in the function pushdownOperators
+  # has a GroupBy operator below it.
+  # Notice that myRoot can never be of type "GroupBy" since we first check
+  # if myRoot.operatorType() is "Select" or not.
+  # So when curr.operatorType() is "GroupBy", we will know that one of myRoot's
+  # descendants, and not myRoot itself, is of type "GroupBy".
+  def hasGroupByBelow(curr):
+    if curr.operatorType() is "Union" or \
+       curr.operatorType().endswith("Join"):
+      return self.hasGroupByBelow(curr.lhsPlan) or self.hasGroupByBelow(curr.rhsPlan)
+    elif curr.operatorType() is "Select" or curr.operatorType() is "Project":
+      return self.hasGroupByBelow(curr.subPlan)
+    elif curr.operatorType() is "GroupBy":
+      return True
+    else: # TableScan: we've reached the end. No GroupBys along the way.
+      return False
 
   def findFirstMatch(self, currPlan, backupParent, predAttributes):
     currPAttributes = currPlan.schema().fields
@@ -222,11 +240,13 @@ class Optimizer:
       curr.operatorType() is "Union":
       leftChild = curr.lhsPlan
       rightChild = curr.rhsPlan
-      while leftChild.operatorType() is "Select":
+      while leftChild.operatorType() is "Select" and \
+            not self.hasGroupByBelow(leftChild):
         self.rawPredicates.append(leftChild.selectExpr)
         curr.lhsPlan = leftChild.subPlan
         leftChild = curr.lhsPlan
-      while rightChild.operatorType() is "Select":
+      while rightChild.operatorType() is "Select" and \
+            not self.hasGroupByBelow(rightChild):
         self.rawPredicates.append(rightChild.selectExpr)
         curr.rhsPlan = rightChild.subPlan
         rightChild = curr.rhsPlan
@@ -234,19 +254,22 @@ class Optimizer:
       curr.rhsPlan = self.traverseTreeSelect(rightChild)
     elif curr.operatorType() is "Project":
       childPlan = curr.subPlan
-      while childPlan.operatorType() is "Select":
+      while childPlan.operatorType() is "Select" and\
+            not self.hasGroupByBelow(childPlan):
         self.rawPredicates.append(childPlan.selectExpr)
         curr.subPlan = childPlan.subPlan
         childPlan = curr.subPlan
       curr.subPlan = self.traverseTreeSelect(childPlan)
-    elif curr.operatorType() is "Select":
+    elif curr.operatorType() is "Select" and \
+         not self.hasGroupByBelow(curr):
       self.rawPredicates.append(curr.selectExpr)
       curr.subPlan = self.traverseTreeSelect(curr.subPlan)
     elif curr.operatorType() is "TableScan":
       return curr
     else:
       childPlan = curr.subPlan
-      while childPlan.operatorType() is "Select":
+      while childPlan.operatorType() is "Select" and \
+            not self.hasGroupByBelow(childPlan):
         self.rawPredicates.append(childPlan.selectExpr)
         curr.subPlan = childPlan.subPlan
         childPlan = curr.subPlan
