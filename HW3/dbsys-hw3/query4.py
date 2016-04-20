@@ -69,9 +69,9 @@ query4 = db.query().fromTable('nation') \
 				   .groupBy( \
 				   	  groupSchema = keySchema, \
 				   	  aggSchema = aggSumSchema, \
-				   	  groupExpr = (lambda e: (e.c_custkey, e.c_name, e.c_acctbal, e.c_phone, e.n_name, e.c_address, e.c_comment)), \
+				   	  groupExpr = (lambda e: (e.C_CUSTKEY, e.C_NAME, e.C_ACCTBAL, e.C_PHONE, e.N_NAME, e.C_ADDRESS, e.C_COMMENT)), \
 				   	  aggExprs = [(0, lambda acc, e:acc + e.l_extendedprice * (1 - e.l_discount), lambda x: x)], \
-				   	  groupHashFn = (lambda gbVal: hash((e.c_custkey, e.c_name, e.c_acctbal, e.c_phone, e.n_name, e.c_address, e.c_comment)) % 31)) \
+				   	  groupHashFn = (lambda gbVal: hash((e.C_CUSTKEY, e.C_NAME, e.C_ACCTBAL, e.C_PHONE, e.N_NAME, e.C_ADDRESS, e.C_COMMENT)) % 31)) \
 				   .select({'C_CUSTKEY': ('C_CUSTKEY', 'int'),
 				   			'C_NAME': ('C_NAME', 'char(25)'),
 				   			'revenue': ('revenue', 'double'),

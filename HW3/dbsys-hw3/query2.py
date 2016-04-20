@@ -32,7 +32,7 @@ query2 = db.query().fromTable('lineitem')\
 				   	  groupSchema = keySchema, \
 				   	  aggSchema = aggSumSchema, \
 				   	  groupExpr = (lambda e: 0), \
-				   	  aggExprs = [(0, lambda acc, e:acc + e.l_extendedprice * (1 - e.l_discount), lambda x: x)], \
+				   	  aggExprs = [(0, lambda acc, e:acc + e.L_EXTENDEDPRICE * (1 - e.L_DISCOUNT), lambda x: x)], \
 				   	  groupHashFn = (lambda gbVal: 0)) \
 				   .select({'promo_revenue': ('promo_revenue', 'double')}).finalize()
 

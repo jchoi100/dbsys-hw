@@ -47,9 +47,9 @@ query3 = db.query().fromTable('customer') \
 				   .groupBy( \
 				   	  groupSchema = keySchema, \
 				   	  aggSchema = aggSumSchema, \
-				   	  groupExpr = (lambda e: (e.l_orderkey, e.o_orderdate, e.o_shippriority)), \
-				   	  aggExprs = [(0, lambda acc, e:acc + e.l_extendedprice * (1 - e.l_discount), lambda x: x)], \
-				   	  groupHashFn = (lambda gbVal: hash((e.l_orderkey, e.o_orderdate, e.o_shippriority)) % 31)) \
+				   	  groupExpr = (lambda e: (e.L_ORDERKEY, e.O_ORDERDATE, e.O_SHIPPRIORITY)), \
+				   	  aggExprs = [(0, lambda acc, e:acc + e.L_EXTENDEDPRICE * (1 - e.L_DISCOUNT), lambda x: x)], \
+				   	  groupHashFn = (lambda gbVal: hash((e.L_ORDERKEY, e.O_ORDERDATE, e.O_SHIPPRIORITY)) % 31)) \
 				   .select({'L_ORDERKEY': ('L_ORDERKEY', 'int'),
 				   			'revenue': ('revenue', 'double'),
                           	'O_ORDERDATE': ('O_ORDERDATE', 'int'),
