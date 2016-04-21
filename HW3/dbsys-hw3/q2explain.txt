@@ -1,3 +1,5 @@
+Query 2
+
 Un-Optimized Explain: 
 Project[5,cost=6205.00](projections={'promo_revenue': ('promo_revenue', 'double')})
   GroupBy[4,cost=6205.00](groupSchema=att[(att,int)], aggSchema=promo_revenue[(promo_revenue,double)])
@@ -16,7 +18,8 @@ Project[5,cost=12210.00](projections={'promo_revenue': ('promo_revenue', 'double
         Select[7,cost=12010.00](predicate='(L_SHIPDATE < 19951001)')
           TableScan[0,cost=6005.00](lineitem)
 
-Join Explain:
+
+Join Explain: 
 Project[5,cost=12210.00](projections={'promo_revenue': ('promo_revenue', 'double')})
   GroupBy[4,cost=12210.00](groupSchema=att[(att,int)], aggSchema=promo_revenue[(promo_revenue,double)])
     BNLJoin[8,cost=12210.00](expr='L_PARTKEY == P_PARTKEY')

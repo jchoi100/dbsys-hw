@@ -67,7 +67,7 @@ JoinOrder Option
 """
 joined_query = db.optimizer.pickJoinOrder(optimized_query)
 print("\n")
-print("Join Explain: "
+print("Join Explain: ")
 print(joined_query.explain())
 """
 Ultimate optimizer

@@ -1,7 +1,9 @@
+Query 5
+
 Un-Optimized Explain: 
 Project[13,cost=7695.00](projections={'revenue': ('revenue', 'double'), 'N_NAME': ('N_NAME', 'char(25)')})
   GroupBy[12,cost=7695.00](groupSchema=groupByKey[(N_NAME,char(25))], aggSchema=revenue[(revenue,double)])
-    Select[11,cost=7695.00](predicate='O_ORDERDATE >= 19940101 and 				   	       O_ORDERDATE < 19950101')
+    Select[11,cost=7695.00](predicate='O_ORDERDATE >= 19940101 and O_ORDERDATE < 19950101')
       NLJoin[10,cost=7695.00](expr='N_REGIONKEY == R_REGIONKEY')
         NLJoin[9,cost=7690.00](expr='N_NATIONKEY == S_NATIONKEY')
           NLJoin[8,cost=7665.00](expr='S_SUPPKEY == L_SUPPKEY')
@@ -31,6 +33,7 @@ Project[13,cost=9195.00](projections={'revenue': ('revenue', 'double'), 'N_NAME'
           TableScan[2,cost=10.00](supplier)
         TableScan[1,cost=25.00](nation)
       TableScan[0,cost=5.00](region)
+
 
 Join Explain:
 Project[13,cost=9195.00](projections={'revenue': ('revenue', 'double'), 'N_NAME': ('N_NAME', 'char(25)')})
