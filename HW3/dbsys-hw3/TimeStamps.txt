@@ -2,26 +2,26 @@ Time stamps
 
 Query1
 
-Opt: 730711 - 728140
-nOp: 58729 - 56185
+Opt: 30853 - 27298 = 3555
+nOp: 5160 - 2456 = 2704
 
 Query2
 
-Opt:
-nOp:
+Opt: 38429 - 10962 = 27,467
+nOp: 80082669 - 79938360 = 144,309
 
 Query3
 
-Opt:
-nOp:
+Opt: 
+nOp: 
 
 Query4
 
-Opt:
-nOp:
+Opt: 
+nOp: 
 
 Query5
 
-Opt:
-nOp:
+Opt: 
+nOp: 
 
