@@ -59,8 +59,9 @@ query3 = db.query().fromTable('customer') \
 """
 Un-Optimized
 """
-# print("Un-Optimized Explain: ")
-# print(query3.explain())
+print("\n")
+print("Un-Optimized Explain: ")
+print(query3.explain())
 # print("Un-Optimized Results: ")
 # qresults = [query3.schema().unpack(tup) \
 #        for page in db.processQuery(query3) \
@@ -70,10 +71,10 @@ Un-Optimized
 """
 Pushdown Option
 """
-# optimized_query = db.optimizer.pushdownOperators(query3)
-# print("\n")
-# print("Pushdown Explain: ")
-# print(optimized_query.explain())
+optimized_query = db.optimizer.pushdownOperators(query3)
+print("\n")
+print("Pushdown Explain: ")
+print(optimized_query.explain())
 # print("Optimized Results: ")
 # opt_qresults = [optimized_query.schema().unpack(tup) \
 #         for page in db.processQuery(optimized_query) \
@@ -83,19 +84,17 @@ Pushdown Option
 """
 Join Order Option
 """
-# print("Join query optimizing...\n")
-# joined_query = db.optimizer.pickJoinOrder(optimized_query)
-# print("Join broken down:\n")
-# for i in db.optimizer.joinList:
-#   print(i.explain())
-# print("\nJoin explain:\n" + joined_query.explain())
+joined_query = db.optimizer.pickJoinOrder(optimized_query)
+print("\n")
+print("Join explain: ")
+print(joined_query.explain())
 
 """
 Ultimate optimizer
 """
-print("Optimized Results: ")
-optimized_query = db.optimizer.pushdownOperators(query3)
-qresults = [optimized_query.schema().unpack(tup) \
-        for page in db.processQuery(optimized_query) \
-        for tup in page[1]]
-print(qresults)
+# print("Optimized Results: ")
+# optimized_query = db.optimizer.pushdownOperators(query3)
+# qresults = [optimized_query.schema().unpack(tup) \
+#         for page in db.processQuery(optimized_query) \
+#         for tup in page[1]]
+# print(qresults)

@@ -31,8 +31,9 @@ query1 = db.query().fromTable('lineitem').where('L_SHIPDATE >= 19940101 and L_SH
 """
 Un-Optimized
 """
-#print("Un-Optimized Explain: ")
-#print(query1.explain())
+print("\n")
+print("Un-Optimized Explain: ")
+print(query1.explain())
 #print("Un-Optimized Results: ")
 #qresults = [query1.schema().unpack(tup) \
 #        for page in db.processQuery(query1) \
@@ -42,11 +43,10 @@ Un-Optimized
 """
 Pushdown Option
 """
-#optimized_query = db.optimizer.pushdownOperators(query1)
-# optimized_query = db.optimizer.pickJoinOrder(optimized_query)
-#print("\n")
-#print("Pushdown Explain: ")
-#print(optimized_query.explain())
+optimized_query = db.optimizer.pushdownOperators(query1)
+print("\n")
+print("Pushdown Explain: ")
+print(optimized_query.explain())
 # print("Optimized Results: ")
 # opt_qresults = [optimized_query.schema().unpack(tup) \
 #         for page in db.processQuery(optimized_query) \
@@ -56,17 +56,17 @@ Pushdown Option
 """
 Join order option
 """
-#print("\n")
-#print("Join Explain:")
-#joined_query = db.optimizer.pickJoinOrder(optimized_query)
-#print(joined_query.explain())
+joined_query = db.optimizer.pickJoinOrder(optimized_query)
+print("\n")
+print("Join Explain:")
+print(joined_query.explain())
 
 """
 Ultimate optimizer
 """
-print("Optimized Results: ")
-optimized_query = db.optimizer.optimizeQuery(query1)
-qresults = [optimized_query.schema().unpack(tup) \
-        for page in db.processQuery(optimized_query) \
-        for tup in page[1]]
-print(qresults)
+# print("Optimized Results: ")
+# optimized_query = db.optimizer.optimizeQuery(query1)
+# qresults = [optimized_query.schema().unpack(tup) \
+#         for page in db.processQuery(optimized_query) \
+#         for tup in page[1]]
+# print(qresults)

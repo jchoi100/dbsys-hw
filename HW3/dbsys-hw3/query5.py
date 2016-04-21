@@ -84,32 +84,31 @@ query5 = db.query().fromTable('region') \
 """
 Un-Optimized Version
 """
+print("\n")
+print("Un-Optimized Explain: ")
+print(query5.explain())
 # print("\n")
-# print("Un-Optimized Explain: ")
-# print(query5.explain())
-# print("\n")
-print("Un-Optimized Results: ")
-qresults = [query5.schema().unpack(tup) \
-        for page in db.processQuery(query5) \
-        for tup in page[1]]
-print(qresults)
+# print("Un-Optimized Results: ")
+# qresults = [query5.schema().unpack(tup) \
+#         for page in db.processQuery(query5) \
+#         for tup in page[1]]
+# print(qresults)
 
 """
 Pushdown Option
 """
-# pushdown_query = db.optimizer.pushdownOperators(query5)
-# print("\n")
-# print("Pushdown Explain: ")
-# print(pushdown_query.explain())
+pushdown_query = db.optimizer.pushdownOperators(query5)
+print("\n")
+print("Pushdown Explain: ")
+print(pushdown_query.explain())
 
 """
 Join Order Option
 """
-# joined_query= db.optimizer.pickJoinOrder(pushdown_query)
-# print("\nJoin Explain:")
-# # for i in db.optimizer.joinList:
-# #   print(i.explain())
-# print(joined_query.explain())
+joined_query= db.optimizer.pickJoinOrder(pushdown_query)
+print("\n")
+print("Join Explain:")
+print(joined_query.explain())
 
 """
 Ultimate optimizer
