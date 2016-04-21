@@ -59,7 +59,7 @@ query4 = db.query().fromTable('nation') \
 						  method = 'nested-loops', \
 						  lhsKeySchema = cCustKeySchema, \
 						  rhsKeySchema = oCustKeySchema, \
-						  expr = 'O_CUSTKEY == L_CUTKEY'), \
+						  expr = 'O_CUSTKEY == L_CUSTKEY'), \
 					  method = 'nested-loops', \
 					  lhsKeySchema = nNationKeySchema, \
 					  rhsKeySchema = cNationKeySchema, \

@@ -42,11 +42,11 @@ Un-Optimized Version
 """
 # print("Un-Optimized Explain: ")
 # print(query2.explain())
-print("Un-Optimized Results: ")
-qresults = [query2.schema().unpack(tup) \
-        for page in db.processQuery(query2) \
-        for tup in page[1]]
-print(qresults)
+# print("Un-Optimized Results: ")
+# qresults = [query2.schema().unpack(tup) \
+#        for page in db.processQuery(query2) \
+#        for tup in page[1]]
+# print(qresults)
 
 """
 Pushdown Option
@@ -73,10 +73,9 @@ JoinOrder Option
 """
 Ultimate optimizer
 """
-# print("Optimized Results: ")
-# optimized_query = db.optimizer.optimizeQuery(query1)
-# qresults = [optimized_query.schema().unpack(tup) \
-#         for page in db.processQuery(optimized_query) \
-#         for tup in page[1]]
-# print(qresults)
-
+print("Optimized Results: ")
+optimized_query = db.optimizer.pickJoinOrder(query2)
+qresults = [optimized_query.schema().unpack(tup) \
+        for page in db.processQuery(optimized_query) \
+        for tup in page[1]]
+print(qresults)
