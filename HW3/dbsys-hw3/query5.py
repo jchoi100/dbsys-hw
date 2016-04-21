@@ -75,7 +75,7 @@ query5 = db.query().fromTable('region') \
 				   	  groupSchema = keySchema, \
 				   	  aggSchema = aggSumSchema, \
 				   	  groupExpr = (lambda e: e.N_NAME), \
-				   	  aggExprs = [(0, lambda acc, e:acc + e.L_EXTENDEDPRICE * (1 - e.L_DISCOUNT), lambda x: x)], \
+				   	  aggExprs = [(0, lambda acc, e:acc + e.L_EXTENDEDPRICE * (1 - e.l_discount), lambda x: x)], \
 				   	  groupHashFn = (lambda gbVal: hash(e.N_NAME) % 31)) \
 				   .select({'N_NAME': ('N_NAME', 'char(25)'),
 				   			'revenue': ('revenue', 'double')
