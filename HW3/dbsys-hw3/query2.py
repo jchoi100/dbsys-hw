@@ -40,27 +40,27 @@ query2 = db.query().fromTable('lineitem')\
 """
 Un-Optimized Version
 """
-print("\n")
+# print("\n")
 # print("Un-Optimized Explain: ")
 # print(query2.explain())
-print("Un-Optimized Results: ")
+# print("Un-Optimized Results: ")
 qresults = [query2.schema().unpack(tup) \
        for page in db.processQuery(query2) \
        for tup in page[1]]
-print(qresults)
+# print(qresults)
 
 """
 Pushdown Option
 """
-optimized_query = db.optimizer.pushdownOperators(query2)
-print("\n")
+# optimized_query = db.optimizer.pushdownOperators(query2)
+# print("\n")
 # print("Pushdown Explain: ")
 # print(optimized_query.explain())
-print("Optimized Results: ")
-opt_qresults = [optimized_query.schema().unpack(tup) \
-       for page in db.processQuery(optimized_query) \
-       for tup in page[1]]
-print(opt_qresults)
+# print("Optimized Results: ")
+# opt_qresults = [optimized_query.schema().unpack(tup) \
+#        for page in db.processQuery(optimized_query) \
+#        for tup in page[1]]
+# print(opt_qresults)
 
 """
 JoinOrder Option

@@ -31,14 +31,14 @@ query1 = db.query().fromTable('lineitem').where('L_SHIPDATE >= 19940101 and L_SH
 """
 Un-Optimized
 """
-print("\n")
+# print("\n")
 # print("Un-Optimized Explain: ")
 # print(query1.explain())
-print("Un-Optimized Results: ")
+# print("Un-Optimized Results: ")
 qresults = [query1.schema().unpack(tup) \
        for page in db.processQuery(query1) \
        for tup in page[1]]
-print(qresults)
+# print(qresults)
 
 """
 Pushdown Option
@@ -64,10 +64,10 @@ Join order option
 """
 Ultimate optimizer
 """
-print("\n")
-print("Optimized Results: ")
-optimized_query = db.optimizer.optimizeQuery(query1)
-qresults = [optimized_query.schema().unpack(tup) \
-        for page in db.processQuery(optimized_query) \
-        for tup in page[1]]
-print(qresults)
+# print("\n")
+# print("Optimized Results: ")
+# optimized_query = db.optimizer.optimizeQuery(query1)
+# qresults = [optimized_query.schema().unpack(tup) \
+#         for page in db.processQuery(optimized_query) \
+#         for tup in page[1]]
+# print(qresults)
