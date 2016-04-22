@@ -1,8 +1,12 @@
 Query 3
 
 Un-Optimized Explain: 
-Project[7,cost=7655.00](projections={'O_ORDERDATE': ('O_ORDERDATE', 'int'), 'O_SHIPPRIORITY': ('O_SHIPPRIORITY', 'int'), 'revenue': ('revenue', 'double'), 'L_ORDERKEY': ('L_ORDERKEY', 'int')})
-  GroupBy[6,cost=7655.00](groupSchema=groupByKey[(L_ORDERKEY,int),(O_ORDERDATE,int),(O_SHIPPRIORITY,int)], aggSchema=revenue[(revenue,double)])
+Project[7,cost=7655.00](projections={'O_ORDERDATE': ('O_ORDERDATE', 'int'), 
+                                     'O_SHIPPRIORITY': ('O_SHIPPRIORITY', 'int'), 
+                                     'revenue': ('revenue', 'double'), 
+                                     'L_ORDERKEY': ('L_ORDERKEY', 'int')})
+  GroupBy[6,cost=7655.00](groupSchema=groupByKey[(L_ORDERKEY,int),(O_ORDERDATE,int),(O_SHIPPRIORITY,int)], 
+                          aggSchema=revenue[(revenue,double)])
     Select[5,cost=7655.00](predicate='O_ORDERDATE < 19950315 and L_SHIPDATE > 19950315')
       NLJoin[4,cost=7655.00](expr='O_CUSTKEY == C_CUSTKEY')
         NLJoin[3,cost=7505.00](expr='L_ORDERKEY == O_ORDERKEY')
@@ -12,8 +16,12 @@ Project[7,cost=7655.00](projections={'O_ORDERDATE': ('O_ORDERDATE', 'int'), 'O_S
 
 
 Pushdown Explain: 
-Project[7,cost=15160.00](projections={'O_ORDERDATE': ('O_ORDERDATE', 'int'), 'O_SHIPPRIORITY': ('O_SHIPPRIORITY', 'int'), 'revenue': ('revenue', 'double'), 'L_ORDERKEY': ('L_ORDERKEY', 'int')})
-  GroupBy[6,cost=15160.00](groupSchema=groupByKey[(L_ORDERKEY,int),(O_ORDERDATE,int),(O_SHIPPRIORITY,int)], aggSchema=revenue[(revenue,double)])
+Project[7,cost=15160.00](projections={'O_ORDERDATE': ('O_ORDERDATE', 'int'), 
+                                      'O_SHIPPRIORITY': ('O_SHIPPRIORITY', 'int'), 
+                                      'revenue': ('revenue', 'double'), 
+                                      'L_ORDERKEY': ('L_ORDERKEY', 'int')})
+  GroupBy[6,cost=15160.00](groupSchema=groupByKey[(L_ORDERKEY,int),(O_ORDERDATE,int),(O_SHIPPRIORITY,int)], 
+                           aggSchema=revenue[(revenue,double)])
     NLJoin[4,cost=15160.00](expr='O_CUSTKEY == C_CUSTKEY')
       NLJoin[3,cost=15010.00](expr='L_ORDERKEY == O_ORDERKEY')
         Select[9,cost=12010.00](predicate='(L_SHIPDATE > 19950315)')
@@ -24,8 +32,12 @@ Project[7,cost=15160.00](projections={'O_ORDERDATE': ('O_ORDERDATE', 'int'), 'O_
 
 
 Join explain: 
-Project[7,cost=15160.00](projections={'O_ORDERDATE': ('O_ORDERDATE', 'int'), 'O_SHIPPRIORITY': ('O_SHIPPRIORITY', 'int'), 'revenue': ('revenue', 'double'), 'L_ORDERKEY': ('L_ORDERKEY', 'int')})
-  GroupBy[6,cost=15160.00](groupSchema=groupByKey[(L_ORDERKEY,int),(O_ORDERDATE,int),(O_SHIPPRIORITY,int)], aggSchema=revenue[(revenue,double)])
+Project[7,cost=15160.00](projections={'O_ORDERDATE': ('O_ORDERDATE', 'int'), 
+                                      'O_SHIPPRIORITY': ('O_SHIPPRIORITY', 'int'), 
+                                      'revenue': ('revenue', 'double'), 
+                                      'L_ORDERKEY': ('L_ORDERKEY', 'int')})
+  GroupBy[6,cost=15160.00](groupSchema=groupByKey[(L_ORDERKEY,int),(O_ORDERDATE,int),(O_SHIPPRIORITY,int)], 
+                           aggSchema=revenue[(revenue,double)])
     BNLJoin[10,cost=15160.00](expr='O_CUSTKEY == C_CUSTKEY')
       TableScan[0,cost=150.00](customer)
       NLJoin[3,cost=15010.00](expr='L_ORDERKEY == O_ORDERKEY')
