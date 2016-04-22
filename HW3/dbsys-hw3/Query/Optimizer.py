@@ -330,20 +330,20 @@ class Optimizer:
               minCost = tempPlan.cost(False)
 
               # i first, BNL
-              tempPlan = self.swapPlan(tempPlan, False)
-              tempPlan.prepare(self.db)
-              cost = tempPlan.cost(False)
-              if(cost < minCost):
-                minCost = cost
-                bestPlan = tempPlan
+              #tempPlan = self.swapPlan(tempPlan, False)
+              #tempPlan.prepare(self.db)
+              #cost = tempPlan.cost(False)
+              #if(cost < minCost):
+              #  minCost = cost
+              #  bestPlan = tempPlan
 
               # i first, NL
-              tempPlan = self.swapPlan(tempPlan, True)
-              tempPlan.prepare(self.db)
-              cost = tempPlan.cost(False)
-              if(cost < minCost):
-                minCost = cost
-                bestPlan = tempPlan
+              #tempPlan = self.swapPlan(tempPlan, True)
+              #tempPlan.prepare(self.db)
+              #cost = tempPlan.cost(False)
+              #if(cost < minCost):
+              #  minCost = cost
+              #  bestPlan = tempPlan
 
               # o first, NL
               tempPlan = self.swapPlan(tempPlan, False)
