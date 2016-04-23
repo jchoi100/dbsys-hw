@@ -1,14 +1,14 @@
 Query 4
 
-Un-Optimized Explain: 
-Project[9,cost=7680.00](projections={'C_ADDRESS': ('C_ADDRESS', 'char(40)'), 
-                                     'C_CUSTKEY': ('C_CUSTKEY', 'int'), 'N_NAME': ('N_NAME', 'char(25)'), 
-                                     'revenue': ('revenue', 'double'), 'C_NAME': ('C_NAME', 'char(25)'), 
-                                     'C_COMMENT': ('C_COMMENT', 'char(117)'), 'C_PHONE': ('C_PHONE', 'char(15)'), 
+Un-Optimized Explain:
+Project[9,cost=7680.00](projections={'C_ADDRESS': ('C_ADDRESS', 'char(40)'),
+                                     'C_CUSTKEY': ('C_CUSTKEY', 'int'), 'N_NAME': ('N_NAME', 'char(25)'),
+                                     'revenue': ('revenue', 'double'), 'C_NAME': ('C_NAME', 'char(25)'),
+                                     'C_COMMENT': ('C_COMMENT', 'char(117)'), 'C_PHONE': ('C_PHONE', 'char(15)'),
                                      'C_ACCTBAL': ('C_ACCTBAL', 'double')})
   GroupBy[8,cost=7680.00](groupSchema=groupByKey[(C_CUSTKEY,int),(C_NAME,char(25)),(C_ACCTBAL,double),
                                                   (C_PHONE,char(15)),(N_NAME,char(25)),(C_ADDRESS,char(40)),
-                                                  (C_COMMENT,char(117))], 
+                                                  (C_COMMENT,char(117))],
                           aggSchema=revenue[(revenue,double)])
     Select[7,cost=7680.00](predicate='O_ORDERDATE >= 19931001 and O_ORDERDATE < 19940101')
       NLJoin[6,cost=7680.00](expr='C_NATIONKEY == N_NATIONKEY')
@@ -20,15 +20,15 @@ Project[9,cost=7680.00](projections={'C_ADDRESS': ('C_ADDRESS', 'char(40)'),
         TableScan[0,cost=25.00](nation)
 
 
-PushedDown Explain: 
-Project[9,cost=9180.00](projections={'C_ADDRESS': ('C_ADDRESS', 'char(40)'), 
-                                     'C_CUSTKEY': ('C_CUSTKEY', 'int'), 'N_NAME': ('N_NAME', 'char(25)'), 
-                                     'revenue': ('revenue', 'double'), 'C_NAME': ('C_NAME', 'char(25)'), 
-                                     'C_COMMENT': ('C_COMMENT', 'char(117)'), 'C_PHONE': ('C_PHONE', 'char(15)'), 
+PushedDown Explain:
+Project[9,cost=9180.00](projections={'C_ADDRESS': ('C_ADDRESS', 'char(40)'),
+                                     'C_CUSTKEY': ('C_CUSTKEY', 'int'), 'N_NAME': ('N_NAME', 'char(25)'),
+                                     'revenue': ('revenue', 'double'), 'C_NAME': ('C_NAME', 'char(25)'),
+                                     'C_COMMENT': ('C_COMMENT', 'char(117)'), 'C_PHONE': ('C_PHONE', 'char(15)'),
                                      'C_ACCTBAL': ('C_ACCTBAL', 'double')})
   GroupBy[8,cost=9180.00](groupSchema=groupByKey[(C_CUSTKEY,int),(C_NAME,char(25)),(C_ACCTBAL,double),
                                                  (C_PHONE,char(15)),(N_NAME,char(25)),(C_ADDRESS,char(40)),
-                                                 (C_COMMENT,char(117))], 
+                                                 (C_COMMENT,char(117))],
                           aggSchema=revenue[(revenue,double)])
     NLJoin[6,cost=9180.00](expr='C_NATIONKEY == N_NATIONKEY')
       NLJoin[5,cost=9155.00](expr='O_CUSTKEY == C_CUSTKEY')
@@ -42,17 +42,18 @@ Project[9,cost=9180.00](projections={'C_ADDRESS': ('C_ADDRESS', 'char(40)'),
 
 
 Join Explain:
-Project[9,cost=9180.00](projections={'C_ADDRESS': ('C_ADDRESS', 'char(40)'), 
-                                     'C_CUSTKEY': ('C_CUSTKEY', 'int'), 'N_NAME': ('N_NAME', 'char(25)'), 
-                                     'revenue': ('revenue', 'double'), 'C_NAME': ('C_NAME', 'char(25)'), 
-                                     'C_COMMENT': ('C_COMMENT', 'char(117)'), 'C_PHONE': ('C_PHONE', 'char(15)'), 
-                                     'C_ACCTBAL': ('C_ACCTBAL', 'double')})
+Project[9,cost=9180.00](projections={'C_ACCTBAL': ('C_ACCTBAL', 'double'),
+                                     'revenue': ('revenue', 'double'),
+                                     'C_ADDRESS': ('C_ADDRESS', 'char(40)'),
+                                     'N_NAME': ('N_NAME', 'char(25)'),
+                                     'C_CUSTKEY': ('C_CUSTKEY', 'int'),
+                                     'C_PHONE': ('C_PHONE', 'char(15)'),
+                                     'C_NAME': ('C_NAME', 'char(25)'),
+                                     'C_COMMENT': ('C_COMMENT', 'char(117)')})
   GroupBy[8,cost=9180.00](groupSchema=groupByKey[(C_CUSTKEY,int),(C_NAME,char(25)),(C_ACCTBAL,double),
                                                  (C_PHONE,char(15)),(N_NAME,char(25)),(C_ADDRESS,char(40)),
-                                                 (C_COMMENT,char(117))], 
-                          aggSchema=revenue[(revenue,double)])
+                                                 (C_COMMENT,char(117))], aggSchema=revenue[(revenue,double)])
     BNLJoin[12,cost=9180.00](expr='C_NATIONKEY == N_NATIONKEY')
-      TableScan[0,cost=25.00](nation)
       NLJoin[5,cost=9155.00](expr='O_CUSTKEY == C_CUSTKEY')
         NLJoin[4,cost=9005.00](expr='L_ORDERKEY == O_ORDERKEY')
           TableScan[3,cost=6005.00](lineitem)
@@ -60,3 +61,6 @@ Project[9,cost=9180.00](projections={'C_ADDRESS': ('C_ADDRESS', 'char(40)'),
             Select[11,cost=3000.00](predicate='(O_ORDERDATE < 19940101)')
               TableScan[2,cost=1500.00](orders)
         TableScan[1,cost=150.00](customer)
+      TableScan[0,cost=25.00](nation)
+
+In this query, the join optimizer changed the first join to a BNLJoin.

@@ -1,6 +1,6 @@
 Query 1
 
-Un-Optimized Explain: 
+Un-Optimized Explain:
 Project[3,cost=12010.00](projections={'revenue': ('revenue', 'double')})
   GroupBy[2,cost=12010.00](groupSchema=att[(att,int)], aggSchema=revenue[(revenue,double)])
     Select[1,cost=12010.00](predicate='L_SHIPDATE >= 19940101 and L_SHIPDATE < 19950101 and
@@ -8,7 +8,7 @@ Project[3,cost=12010.00](projections={'revenue': ('revenue', 'double')})
       TableScan[0,cost=6005.00](lineitem)
 
 
-Pushdown Explain: 
+Pushdown Explain:
 Project[3,cost=12010.00](projections={'revenue': ('revenue', 'double')})
   GroupBy[2,cost=12010.00](groupSchema=att[(att,int)], aggSchema=revenue[(revenue,double)])
     Select[4,cost=12010.00](predicate='(L_SHIPDATE >= 19940101)')
@@ -29,5 +29,4 @@ Project[3,cost=12010.00](projections={'revenue': ('revenue', 'double')})
             Select[8,cost=12010.00](predicate='(L_QUANTITY < 24)')
               TableScan[0,cost=6005.00](lineitem)
 
-
-
+In this query, there was no join, so the join optimizer did not do anything.
