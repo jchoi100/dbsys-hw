@@ -393,17 +393,17 @@ class Join(Operator):
   #Overriding default Operator method
   def cost(self, estimated):
     joinCost = 0
-
-    #Reference: DBSys Lecture 7 Slide 21
+ 
+   #Reference: DBSys Lecture 7 Slide 21
     if self.joinMethod is 'nested-loops':
       joinCost += self.leftPageCount + (self.leftTuplesPerPage * self.rightPageCount);
 
     #Reference: DBSys Lecture 8 Slide 2
-    if self.joinMethod is 'block-nested-loops':
+    elif self.joinMethod is 'block-nested-loops':
       joinCost += self.leftPageCount + ((self.leftPageCount / (self.bufferPoolSize - 2)) * self.rightPageCount)
 
     #Reference: DBSys Lecture 8 Slide 2
-    if self.joinMethod == 'hash':
+    elif self.joinMethod == 'hash':
       joinCost += 3 * (self.leftPageCount + self.rightPageCount)
 
     subplanCost = sum(map(lambda x: x.cost(estimated), self.inputs()))
