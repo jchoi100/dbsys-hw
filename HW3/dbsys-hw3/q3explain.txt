@@ -1,0 +1,35 @@
+
+
+Un-Optimized Explain: 
+Project[7,cost=7655.00](projections={'O_SHIPPRIORITY': ('O_SHIPPRIORITY', 'int'), 'revenue': ('revenue', 'double'), 'L_ORDERKEY': ('L_ORDERKEY', 'int'), 'O_ORDERDATE': ('O_ORDERDATE', 'int')})
+  GroupBy[6,cost=7655.00](groupSchema=groupByKey[(L_ORDERKEY,int),(O_ORDERDATE,int),(O_SHIPPRIORITY,int)], aggSchema=revenue[(revenue,double)])
+    Select[5,cost=7655.00](predicate='O_ORDERDATE < 19950315 and L_SHIPDATE > 19950315')
+      NLJoin[4,cost=7655.00](expr='O_CUSTKEY == C_CUSTKEY')
+        NLJoin[3,cost=7505.00](expr='L_ORDERKEY == O_ORDERKEY')
+          TableScan[2,cost=6005.00](lineitem)
+          TableScan[1,cost=1500.00](orders)
+        TableScan[0,cost=150.00](customer)
+
+
+Pushdown Explain: 
+Project[7,cost=15160.00](projections={'O_SHIPPRIORITY': ('O_SHIPPRIORITY', 'int'), 'revenue': ('revenue', 'double'), 'L_ORDERKEY': ('L_ORDERKEY', 'int'), 'O_ORDERDATE': ('O_ORDERDATE', 'int')})
+  GroupBy[6,cost=15160.00](groupSchema=groupByKey[(L_ORDERKEY,int),(O_ORDERDATE,int),(O_SHIPPRIORITY,int)], aggSchema=revenue[(revenue,double)])
+    NLJoin[4,cost=15160.00](expr='O_CUSTKEY == C_CUSTKEY')
+      NLJoin[3,cost=15010.00](expr='L_ORDERKEY == O_ORDERKEY')
+        Select[9,cost=12010.00](predicate='(L_SHIPDATE > 19950315)')
+          TableScan[2,cost=6005.00](lineitem)
+        Select[8,cost=3000.00](predicate='(O_ORDERDATE < 19950315)')
+          TableScan[1,cost=1500.00](orders)
+      TableScan[0,cost=150.00](customer)
+
+
+Join explain: 
+Project[7,cost=15160.00](projections={'O_SHIPPRIORITY': ('O_SHIPPRIORITY', 'int'), 'revenue': ('revenue', 'double'), 'L_ORDERKEY': ('L_ORDERKEY', 'int'), 'O_ORDERDATE': ('O_ORDERDATE', 'int')})
+  GroupBy[6,cost=15160.00](groupSchema=groupByKey[(L_ORDERKEY,int),(O_ORDERDATE,int),(O_SHIPPRIORITY,int)], aggSchema=revenue[(revenue,double)])
+    BNLJoin[10,cost=15160.00](expr='O_CUSTKEY == C_CUSTKEY')
+      NLJoin[3,cost=15010.00](expr='L_ORDERKEY == O_ORDERKEY')
+        Select[9,cost=12010.00](predicate='(L_SHIPDATE > 19950315)')
+          TableScan[2,cost=6005.00](lineitem)
+        Select[8,cost=3000.00](predicate='(O_ORDERDATE < 19950315)')
+          TableScan[1,cost=1500.00](orders)
+      TableScan[0,cost=150.00](customer)
