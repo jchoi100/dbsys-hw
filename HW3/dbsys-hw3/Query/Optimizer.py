@@ -309,7 +309,6 @@ class Optimizer:
     for i in self.joinList:
       optimalList.append((Plan(root=i), i))
 
-    # TODO make sure what the upperbound for the outermost for loop is
     for x in range(2, len(self.joinList) + 1):
       tempList = list()
       for o, n in optimalList:
@@ -328,21 +327,6 @@ class Optimizer:
               tempPlan.prepare(self.db)
               bestPlan = tempPlan
               minCost = tempPlan.cost(False)
-              # i first, BNL
-              #tempPlan = self.swapPlan(tempPlan, False)
-              #tempPlan.prepare(self.db)
-              #cost = tempPlan.cost(False)
-              #if(cost < minCost):
-              #  minCost = cost
-              #  bestPlan = tempPlan
-
-              # i first, NL
-              #tempPlan = self.swapPlan(tempPlan, True)
-              #tempPlan.prepare(self.db)
-              #cost = tempPlan.cost(False)
-              #if(cost < minCost):
-              #  minCost = cost
-              #  bestPlan = tempPlan
 
               # o first, NL
               tempPlan = self.swapPlan(tempPlan, False)
@@ -352,27 +336,23 @@ class Optimizer:
                 minCost = cost
                 bestPlan = tempPlan
 
-              # print("bestPlan " + bestPlan.explain())
               oldNode = self.joinExprList[tempKey][1]
               tempList.append((bestPlan, oldNode))
 
       optimalList = copy.copy(tempList)
 
-    # print("Optimal plan:\n" + optimalList[0][0].explain())
     currNode = preJoin.root
     while currNode is not None:
       currType = currNode.operatorType()
-      # print(currType)
       if currType is "Project" or currType is "Select" or currType is "GroupBy":
         if currNode.subPlan is not None:
           currNode = currNode.subPlan
         else:
           currNode.subPlan = optimalList[0][0].root
       elif currType is "TableScan":
-        # print("Uh oh")
         currNode = None
       elif currType is "Union" or "Join":
-        if currNode.rhsPlan is not None: #is this lhs/rhs?
+        if currNode.rhsPlan is not None:
           currNode = currNode.lhsPlan
         else:
           currNode = optimalList[0][0].root
@@ -439,8 +419,6 @@ class Optimizer:
           elif prevType is "Union":
             prevNode.rhsPlan = None
             prevNode.lhsPlan = None
-            # TODO is this supposed to be rhsPlan/lhsPlan in light of the lhs/rhs seeming to be switched?
-            # TODO maybe just the python queries are in the wrong order
 
         elif currType is "Project" or currType is "Select" or currType is "GroupBy":
           prevNode = currNode
@@ -467,17 +445,14 @@ class Optimizer:
           self.joinExprList[key] = (expr, currNode)
 
           self.joinList.append(currNode.rhsPlan)
-          #print("Appended... " +  currNode.lhsPlan.operatorType() + " rather than " + currNode.rhsPlan.operatorType())
-          #print("Put back recursively... " + currNode.rhsPlan.operatorType())
           retrieved = self.getJoins(Plan(root=currNode.lhsPlan))
           if retrieved is not None:
             if not retrieved.root.operatorType().endswith("Join"):
               self.joinList.append(retrieved.root)
-              # print("Recursively appended... " + self.joinList[-1].operatorType())
           if currNode is prevNode:
             return None
           else:
-            prevNode.subplan = None #TODO handle the different kinds of operators
+            prevNode.subplan = None
             return preJoin
         elif currType is "Project" or currType == "Select" or currType == "GroupBy":
           prevNode = currNode
