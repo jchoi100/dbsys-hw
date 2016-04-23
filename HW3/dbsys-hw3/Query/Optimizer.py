@@ -328,7 +328,6 @@ class Optimizer:
               tempPlan.prepare(self.db)
               bestPlan = tempPlan
               minCost = tempPlan.cost(False)
-
               # i first, BNL
               #tempPlan = self.swapPlan(tempPlan, False)
               #tempPlan.prepare(self.db)
