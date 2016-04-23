@@ -74,7 +74,7 @@ JoinOrder Option
 Ultimate optimizer
 """
 print("Optimized Results: ")
-optimized_query = db.optimizer.pickJoinOrder(query2)
+optimized_query = db.optimizer.optimizeQuery(query2)
 print("Optimized explain:\n" + optimized_query.explain())
 # qresults = [optimized_query.schema().unpack(tup) \
 #         for page in db.processQuery(optimized_query) \

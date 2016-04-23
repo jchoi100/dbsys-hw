@@ -335,7 +335,8 @@ class Optimizer:
               # o first, BNL
               tempPlan = Plan(root=tempJoin)
               bestPlan = tempPlan
-              minCost = self.getPlanCost(tempPlan)
+              tempPlan.prepare(self.db)
+              minCost = tempPlan.cost(False)
               # i first, BNL
               #tempPlan = self.swapPlan(tempPlan, False)
               #tempPlan.prepare(self.db)
@@ -353,9 +354,9 @@ class Optimizer:
               #  bestPlan = tempPlan
 
               # o first, NL
-              #tempPlan = self.swapPlan(tempPlan, False)
-              tempPlan.joinMethod = "nested-loops"
-              cost = self.getPlanCost(tempPlan)
+              tempPlan = self.swapPlan(tempPlan, False)
+              tempPlan.prepare(self.db)
+              cost = tempPlan.cost(False)
               if(cost < minCost):
                 minCost = cost
                 bestPlan = tempPlan
