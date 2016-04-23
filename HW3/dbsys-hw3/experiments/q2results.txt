@@ -1,8 +1,0 @@
-
-
-Un-Optimized Results: 
-[tmp_Project_5(promo_revenue=2195765.297099999)]
-
-
-Optimized Results: 
-[tmp_Project_5(promo_revenue=2195765.297099999)]

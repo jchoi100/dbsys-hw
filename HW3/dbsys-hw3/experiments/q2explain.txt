@@ -27,5 +27,3 @@ Project[5,cost=12210.00](projections={'promo_revenue': ('promo_revenue', 'double
         Select[7,cost=12010.00](predicate='(L_SHIPDATE < 19951001)')
           TableScan[0,cost=6005.00](lineitem)
       TableScan[1,cost=200.00](part)
-
-For this query, the join optimizer changed the NLJoin to a BNLJoin because it is more cost efficient. It also changed the ordering of the join back to left deep.

@@ -1,8 +1,0 @@
-
-
-Un-Optimized Results: 
-[tmp_Project_3(revenue=25012.929600000003)]
-
-
-Optimized Results: 
-[tmp_Project_3(revenue=25012.929600000003)]

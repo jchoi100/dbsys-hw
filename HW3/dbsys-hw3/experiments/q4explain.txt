@@ -62,5 +62,3 @@ Project[9,cost=9180.00](projections={'C_ACCTBAL': ('C_ACCTBAL', 'double'),
               TableScan[2,cost=1500.00](orders)
         TableScan[1,cost=150.00](customer)
       TableScan[0,cost=25.00](nation)
-
-In this query, the join optimizer changed the first join to a BNLJoin.

@@ -28,5 +28,3 @@ Project[3,cost=12010.00](projections={'revenue': ('revenue', 'double')})
           Select[7,cost=12010.00](predicate='(L_DISCOUNT > 0.05)')
             Select[8,cost=12010.00](predicate='(L_QUANTITY < 24)')
               TableScan[0,cost=6005.00](lineitem)
-
-In this query, there was no join, so the join optimizer did not do anything.

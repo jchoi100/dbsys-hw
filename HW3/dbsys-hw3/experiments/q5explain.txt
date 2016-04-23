@@ -51,5 +51,3 @@ Project[13,cost=9195.00](projections={'N_NAME': ('N_NAME', 'char(25)'), 'revenue
           TableScan[2,cost=10.00](supplier)
         TableScan[1,cost=25.00](nation)
       TableScan[0,cost=5.00](region)
-
-In this query, the join optimizer changed the first join to a BLNJoin.
