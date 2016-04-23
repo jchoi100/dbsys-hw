@@ -68,30 +68,21 @@ class Optimizer:
 
   # Checks if we have already computed the cost of this plan.
   def getPlanCost(self, plan):
+    if "Join" in plan.root.operatorType():
+      cacheKey = (plan, plan.root.joinMethod, tuple(plan.root.inputs()))
+    else:
+      cacheKey = (plan, None, tuple(plan.root.inputs()))
 
-    for i, operator in plan.flatten():
-      operator.initializeStatistics()
-    plan.sampleCardinality = 0
-    plan.prepare(self.db)
-    plan.sample(10.0)
-    cost = plan.cost(False)
-    return cost
+    if cacheKey not in self.statsCache:
+      for i, operator in plan.flatten():
+        operator.initializeStatistics()
+      plan.sampleCardinality = 0
+      plan.prepare(self.db)
+      plan.sample(10.0)
+      cost = plan.cost(True)
+      self.addPlanCost(plan, cost)
 
-#    if "Join" in plan.root.operatorType():
-#      cacheKey = (plan, plan.root.joinMethod, tuple(plan.root.inputs()))
-#    else:
-#      cacheKey = (plan, None, tuple(plan.root.inputs()))
-#
-#    if cacheKey not in self.statsCache:
-#      for i, operator in plan.flatten():
-#        operator.initializeStatistics()
-#      plan.sampleCardinality = 0
-#      plan.prepare(self.db)
-#      plan.sample(10.0)
-#      cost = plan.cost(True)
-#      self.addPlanCost(plan, cost)
-#
-#    return self.statsCache[cacheKey]
+    return self.statsCache[cacheKey]
 
   # Given a plan, return an optimized plan with both selection and
   # projection operations pushed down to their nearest defining relation
@@ -334,8 +325,10 @@ class Optimizer:
 
               # o first, BNL
               tempPlan = Plan(root=tempJoin)
+              tempPlan.prepare(self.db)
               bestPlan = tempPlan
-              minCost = self.getPlanCost(tempPlan)
+              minCost = tempPlan.cost(False)
+
               # i first, BNL
               #tempPlan = self.swapPlan(tempPlan, False)
               #tempPlan.prepare(self.db)
@@ -353,9 +346,9 @@ class Optimizer:
               #  bestPlan = tempPlan
 
               # o first, NL
-              #tempPlan = self.swapPlan(tempPlan, False)
-              tempPlan.joinMethod = "nested-loops"
-              cost = self.getPlanCost(tempPlan)
+              tempPlan = self.swapPlan(tempPlan, False)
+              tempPlan.prepare(self.db)
+              cost = tempPlan.cost(False)
               if(cost < minCost):
                 minCost = cost
                 bestPlan = tempPlan
