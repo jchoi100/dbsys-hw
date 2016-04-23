@@ -44,9 +44,9 @@ Un-Optimized Version
 # print("Un-Optimized Explain: ")
 # print(query2.explain())
 # print("Un-Optimized Results: ")
-qresults = [query2.schema().unpack(tup) \
-       for page in db.processQuery(query2) \
-       for tup in page[1]]
+# qresults = [query2.schema().unpack(tup) \
+#        for page in db.processQuery(query2) \
+#        for tup in page[1]]
 # print(qresults)
 
 """

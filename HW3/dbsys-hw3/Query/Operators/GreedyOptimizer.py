@@ -1,6 +1,7 @@
 import itertools
 import pdb
 import copy
+import sys
 from collections import deque
 from Query.Plan import Plan
 from Query.Operators.Join import Join
@@ -8,6 +9,7 @@ from Query.Operators.Project import Project
 from Query.Operators.Select import Select
 from Utils.ExpressionInfo import ExpressionInfo
 from Catalog.Schema import DBSchema
+from Query.Operators.BushyOptimizer import BushyOptimizer
 
 # Main difference from Bushy: For each run through the main for loop in pickJoinOrder
 # Only one optimal plan will be found, instead a list of all the
@@ -35,7 +37,7 @@ class GreedyOptimizer(BushyOptimizer):
 
     for x in range(2, len(self.joinList) + 1):
       tempList = list()
-      minCost = sys.maxSize
+      minCost = sys.maxsize
       for o, n in optimalList:
         for i in self.joinList:
           if not self.insidePlan(i, o):
