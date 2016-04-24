@@ -1,0 +1,10 @@
+drop index lineitem_shipdate;
+drop index lineitem_discount;
+drop index lineitem_quantity;
+drop index region_name;
+drop index orders_orderdate;
+drop index orders_orderkey;
+drop index customer_mktsegment;
+drop index customer_acctbal;
+
+

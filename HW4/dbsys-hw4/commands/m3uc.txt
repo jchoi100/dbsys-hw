@@ -1,0 +1,8 @@
+alter table part parallel 1;
+alter table supplier parallel 1;
+alter table partsupp parallel 1;
+alter table customer parallel 1;
+alter table orders parallel 1;
+alter table lineitem parallel 1;
+alter table nation parallel 1;
+alter table region parallel 1;

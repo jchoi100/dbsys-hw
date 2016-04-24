@@ -1,0 +1,10 @@
+create index lineitem_shipdate on lineitem(l_shipdate);
+create index lineitem_discount on lineitem(l_discount);
+create index lineitem_quantity on lineitem(l_quantity);
+create index region_name on region(r_name);
+create index orders_orderdate on orders(o_orderdate);
+create index orders_orderkey on orders(o_orderkey);
+create index customer_mktsegment on customer(c_mktsegment);
+create index customer_acctbal on customer(c_acctbal);
+
+

@@ -1,0 +1,11 @@
+analyze table part delete statistics;
+analyze table supplier delete statistics; 
+analyze table partsupp delete statistics; 
+analyze table customer delete statistics; 
+analyze table orders delete statistics; 
+analyze table lineitem delete statistics; 
+analyze table nation delete statistics; 
+analyze table region delete statistics; 
+
+
+

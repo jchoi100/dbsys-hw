@@ -1,0 +1,5 @@
+drop materialized view lineitem_shipdate;
+drop materialized view lineitem_orders_customer;
+drop materialized view avg_acctbal;
+drop materialized view colsnr;
+drop materialized view lineitem_shipdate2;

@@ -1,0 +1,8 @@
+alter table part no inmemory;
+alter table supplier no inmemory;
+alter table partsupp no inmemory;
+alter table customer no inmemory;
+alter table orders no inmemory;
+alter table lineitem no inmemory;
+alter table nation no inmemory;
+alter table region no inmemory;

@@ -1,0 +1,23 @@
+Query 1
+create materialized view lineitem_shipdate enable query rewrite as select * from lineitem where l_shipdate <= DATE '1998-09-02';
+
+Query 18
+create materialized view lineitem_orders_customer enable query rewrite as select * from lineitem, orders, customer where l_orderkey = o_orderkey and c_custkey = o_custkey;
+
+Query 22
+create materialized view avg_acctbal enable query rewrite as select avg(c_acctbal) from customer where c_acctbal > 0.00;
+
+Query 3
+//same as query 18
+
+Query 5 (took too long to materialize!--quit)
+create materialized view colsnr enable query rewrite as select * from lineitem, orders, customer, supplier, nation, region where l_orderkey = o_orderkey AND l_suppkey = s_suppkey AND c_nationkey = s_nationkey AND s_nationkey = n_nationkey AND n_regionkey = r_regionkey;
+
+Query 6
+create materialized view lineitem_shipdate2 enable query rewrite as select * from lineitem where l_shipdate <= DATE '1994-01-01' AND l_shipdate < DATE '1995-01-01';
+
+//in bash
+
+create materialized view lineitem_shipdate enable query rewrite as select * from lineitem where l_shipdate <= DATE '1998-09-02';
+create materialized view lineitem_orders_customer enable query rewrite as select * from lineitem, orders, customer where l_orderkey = o_orderkey and c_custkey = o_custkey;
+create materialized view lineitem_shipdate2 enable query rewrite as select * from lineitem where l_shipdate <= DATE '1994-01-01' and l_shipdate < '1995-01-01';
